@@ -106,9 +106,11 @@ namespace corpus2tag
             swmap.Close();
 
             //Read each line and convert it into CRFSharp training format
+            int LineNo = 0;
             while (sr.EndOfStream == false)
             {
-                string strLine = sr.ReadLine();
+                string strLine = sr.ReadLine().Trim();
+                LineNo++;
 
                 try
                 {
@@ -127,7 +129,7 @@ namespace corpus2tag
                         //Check whether the data format is correct
                         if (item[item.Length - 1] != ']')
                         {
-                            Console.WriteLine("{0} is invalidated format", strLine);
+                            Console.WriteLine("{0} is invalidated format at Line #{1}", strLine, LineNo);
                             break;
                         }
 
@@ -141,13 +143,13 @@ namespace corpus2tag
                         else
                         {
                             //Check whether the data format is correct
-                            Console.WriteLine("{0} is invalidated format", strLine);
+                            Console.WriteLine("{0} is invalidated format at Line #{1}", strLine, LineNo);
                             break;
                         }
 
                         if (term.Length == 0 || tag.Length == 0)
                         {
-                            Console.WriteLine("Invalidate line: {0}", strLine);
+                            Console.WriteLine("Invalidate line: {0} at #{1}", strLine, LineNo);
                             break;
                         }
 
@@ -257,7 +259,7 @@ namespace corpus2tag
                 }
                 catch (SystemException err)
                 {
-                    Console.WriteLine("Invalidated Line: {0}", strLine);
+                    Console.WriteLine("Invalidated Line: {0} at #{1}", strLine, LineNo);
                     Console.WriteLine("Error Message: {0}", err.Message);
                     Console.WriteLine("Stack Info: {0}", err.StackTrace);
                     return;
