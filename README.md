@@ -1,10 +1,10 @@
 CRFSharp
 ========
 
-# Project Description
+## Project Description
  CRFSharp is Conditional Random Fields implemented by .NET(C#), a machine learning algorithm for learning from labeled sequences of examples.
 
-# Overview
+## Overview
 CRFSharp is Conditional Random Fields implemented by .NET(C#), a machine learning algorithm for learning from labeled sequences of examples. It is widely used in Natural Language Process (NLP) tasks, for example: word breaker, postaging, named entity recognized and so on.
 
  CRFSharp (aka CRF#) is based on .NET Framework 4.0 and its mainly algorithm is similar with CRF++ written by Taku Kudo. It encodes model parameters by L-BFGS. Moreover, it has many significant improvements than CRF++, such as totally parallel encoding, optimizing memory usage and so on. 
@@ -19,7 +19,7 @@ Besides command line tool, CRFSharp has also provided APIs and these APIs can be
 
  To use CRFSharp, we need to prepare corpus and design feature templates at first. CRFSharp's file formats are compatible with CRF++(official website:http://crfpp.googlecode.com/svn/trunk/doc/index.html). The following paragraphs will introduce data formats and how to use CRFSharp in both command line and APIs
 
-# Training file format
+## Training file format
 Training corpus contains many records to describe what the model should be. For each record, it is split into one or many tokens and each token has one or many dimension features to describe itself. 
 
  In training file, each record can be represented as a matrix and ends with an empty line. In the matrix, each row describes one token and its features, and each column represents a feature in one dimension. In entire training corpus, the number of column must be fixed.
@@ -67,10 +67,10 @@ For TYPE, the example contains many types as follows:
  LOCATION : the name of one location 
  For output answer without TYPE, it's just a normal term, not a named entity. 
 
-# Test file format
+## Test file format
 Test file has the similar format as training file. The only different between training and test file is the last column. In test file, all columns are features for CRF model.
 
-# CRFSharp command line tools
+## CRFSharp command line tools
 CRFSharpConsole.exe is a command line tool to encode and decode CRF model. By default, the help information showed as follows:  
  Linear-chain CRF encoder & decoder by Zhongkai Fu (fuzhongkai@gmail.com)  
 **CRFSharpConsole.exe** [parameter list...]  
@@ -80,7 +80,7 @@ CRFSharpConsole.exe is a command line tool to encode and decode CRF model. By de
 
  As the above information shows, the tool provides two run modes. Encode mode is for training model, and decode mode is for testing model. The following paragraphs introduces how to use these two modes.
 
-# Encode model
+## Encode model
 This mode is used to train CRF model from training corpus. Besides -encode parameter, the command line parameters as follows:  
 **CRFSharpConsole.exe** -encode [parameters list]  
 **-template** <filename>: template file name  
@@ -129,7 +129,7 @@ After encoding process is finished, the following files will be generated.
  file3: **[model file name]**.alpha  
  This is feature set weight score file. It contains all features' weight score.  
 
-# Decode model
+## Decode model
 This mode is used to decode and test encoded model. Besides -decode parameter, there are some other required and optional parameters:  
 CRFSharpConsole.exe -decode <options>  
 **-modelfile** <string> : The model file used for decoding  
@@ -141,18 +141,18 @@ CRFSharpConsole.exe -decode <options>
 Here is an example:  
  CRFSharpConsole.exe -decode -modelfile ner.model -inputfile ner_test.txt -outputfile ner_test_result.txt -nbest 5 -prob
 
-# Shrink model
+## Shrink model
 Encoded model with L1 regularization is usually a sparse model. Shrink parameter is used to reduce model file size. With -shrink parameter, the command line as follows:  
 CRFSharpConsole.exe -shrink [Encoded CRF model file name] [Shrinked CRF model file name] [thread num]  
  An example as follows:  
 CRFSharpConsole.exe -shrink ner.model ner_shrinked.model 16  
  This example is used to shrink ner.model files and the working thread is 16.   
 
-# Incremental training
+## Incremental training
 For some complex tasks, encoding model is timing-cost. With "-retrainmodel <previous encoded model file name>" option and updated training corpus (both old and new training corpus), CRFSharp supports to train model incrementally and compared with full training, incremental training is able to save lots of time.  There is an example:  
 CRFSharpConsole.exe -encode -template template.1 -trainfile ner_new.train -modelfile ner_new.model -retrainmodel ner.model -maxiter 100 -minfeafreq 1 -mindiff 0.0001 -thread 4 –debug  
 
-# Feature templates
+## Feature templates
 CRFSharp template is totally compatible with CRF++ and used to generate feature set from training and testing corpus.
 
  In template file, each line describes one template which consists of prefix, id and rule-string. The prefix is used to indicate template type. There are two prefix, U for unigram template, and B for bigram template. Id is used to distinguish different templates. And rule-string is used to guide CRFSharp to generate features. 
@@ -206,19 +206,19 @@ Although U07 and U08, U11 and U12’s rule-string are the same, we can still dis
 
 For bigram template, CRFSharp will enumerate all possible combined output classes of two contiguous tokens, and generate features for each combined one. So, if each token has N different output classes, and the number of features generated by templates is M, the total bigram feature set size is {“N*N*M”}. For a record which contains L tokens, the feature size of this record is {“M*N*N*(L-1)”}.
 
-# Run on Linux/Mac
+## Run on Linux/Mac
 
 With Mono-project which is the third party .NET framework on Linux/Mac, CRFSharp is able to run on some non-Windows platforms, such as Linux, Mac and others.
 
 With NO_SUPPORT_PARALLEL_LIB flag, CRFSharp needn't to be re-compiled or modified to run on these operating systems. However, if you want to disable NO_SUPPORT_PARALLEL_LIB for the highest encoding performance, please modify existed code by replacing Parallel.For for "long" type with that for "int" type, since so far Mono-project hasn't implemented Parallel.For for "long" type yet.
 
-# Use CRFSharp API in your project
+## Use CRFSharp API in your project
 
 Besides command line tool, to encode and decode CRF model, you can also add CRFSharp.dll or CRFSharpWrapper.dll as references in your project. CRFSharp.dll contains core algorithm and provides many interfaces in low level. On the contrary, CRFSharpWrapper.dll  wraps above low level interfaces and provides interfaces in high level.
 
 The following paragraphs show how to use CRFSharpWrapper.dll in a project
 
-# Encode model
+## Encode model
 1. Add CRFSharpWrapper.dll as reference  
 2. Add following code snippet  
 ```c#
