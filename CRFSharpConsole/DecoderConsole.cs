@@ -25,8 +25,9 @@ namespace CRFSharpConsole
             Console.WriteLine("                       0 - not output probability");
             Console.WriteLine("                       1 - only output the sequence label probability");
             Console.WriteLine("                       2 - output both sequence label and individual entity probability");
+            Console.WriteLine("-maxword <int>       : <int> max words per sentence, default value is 100");
             Console.WriteLine("Example: ");
-            Console.WriteLine("         CRFSharp_Console -decode -modelfile ner.model -inputfile ner_test.txt -outputfile ner_test_result.txt -outputsegfile ner_test_result_seg.txt -thread 4 -nbest 3 -prob 2");
+            Console.WriteLine("         CRFSharp_Console -decode -modelfile ner.model -inputfile ner_test.txt -outputfile ner_test_result.txt -outputsegfile ner_test_result_seg.txt -thread 4 -nbest 3 -prob 2 -maxword 500");
         }
 
         public void Run(string[] args)
@@ -69,6 +70,9 @@ namespace CRFSharpConsole
                                 break;
                             case "prob":
                                 options.probLevel = int.Parse(value);
+                                break;
+                            case "maxword":
+                                options.maxword = int.Parse(value);
                                 break;
 
                             default:
@@ -147,14 +151,14 @@ namespace CRFSharpConsole
                 {
 
                     //Create decoder tagger instance. If the running environment is multi-threads, each thread needs a separated instance
-                    SegDecoderTagger tagger = crfWrapper.CreateTagger(options.nBest);
+                    SegDecoderTagger tagger = crfWrapper.CreateTagger(options.nBest, options.maxword);
                     tagger.set_vlevel(options.probLevel);
 
                     //Initialize result
                     crf_seg_out[] crf_out = new crf_seg_out[options.nBest];
                     for (int i = 0; i < options.nBest; i++)
                     {
-                        crf_out[i] = new crf_seg_out();
+                        crf_out[i] = new crf_seg_out(tagger.crf_max_word_num);
                     }
 
                     List<List<string>> inbuf = new List<List<string>>();

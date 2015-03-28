@@ -36,7 +36,8 @@ namespace CRFSharpWrapper
             tokenList.Clear();
         }
 
-        public crf_seg_out()
+        public crf_seg_out(int max_word_num = Utils.DEFAULT_CRF_MAX_WORD_NUM):
+            base(max_word_num)
         {
             termTotalLength = 0;
             tokenList = new List<SegToken>();

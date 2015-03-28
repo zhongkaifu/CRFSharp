@@ -22,13 +22,13 @@ namespace CRFSharpWrapper
             return modelReader.LoadModel(strModelFileName);
         }
 
-        public SegDecoderTagger CreateTagger(int nbest)
+        public SegDecoderTagger CreateTagger(int nbest, int this_crf_max_word_num = Utils.DEFAULT_CRF_MAX_WORD_NUM)
         {
             if (modelReader == null)
             {
                 return null;
             }
-            SegDecoderTagger tagger = new SegDecoderTagger(nbest);
+            SegDecoderTagger tagger = new SegDecoderTagger(nbest, this_crf_max_word_num);
             tagger.init_by_model(modelReader);
 
             return tagger;

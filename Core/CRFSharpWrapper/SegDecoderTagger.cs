@@ -13,8 +13,8 @@ namespace CRFSharpWrapper
 {
     public class SegDecoderTagger : DecoderTagger
     {
-        public SegDecoderTagger(int nbest, uint this_crf_max_word_num = Utils.DEFAULT_CRF_MAX_WORD_NUM)
-            : base(nbest, crf_max_word_num)
+        public SegDecoderTagger(int nbest, int this_crf_max_word_num = Utils.DEFAULT_CRF_MAX_WORD_NUM)
+            : base(nbest, this_crf_max_word_num)
         {
             crf_max_word_num = this_crf_max_word_num;
         }

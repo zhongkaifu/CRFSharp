@@ -28,7 +28,7 @@ namespace CRFSharp
 
 
         public const int MINUS_LOG_EPSILON = 13;
-        public const uint DEFAULT_CRF_MAX_WORD_NUM = 100;
+        public const int DEFAULT_CRF_MAX_WORD_NUM = 100;
 
         public const int MODEL_TYPE_NORM = 100;
         public const int MODEL_TYPE_SHRINKED = 101;

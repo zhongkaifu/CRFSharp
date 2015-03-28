@@ -19,11 +19,11 @@ namespace CRFSharp
         public string[] result_;
         public double[] weight_;
 
-        public crf_term_out()
+        public crf_term_out(int max_word_num = Utils.DEFAULT_CRF_MAX_WORD_NUM)
         {
             prob = 0;
-            result_ = new string[Utils.DEFAULT_CRF_MAX_WORD_NUM];
-            weight_ = new double[Utils.DEFAULT_CRF_MAX_WORD_NUM];
+            result_ = new string[max_word_num];
+            weight_ = new double[max_word_num];
         }
     }
 
@@ -49,9 +49,9 @@ namespace CRFSharp
         }
 
         Heap heap_queue; //Using min-heap to get next result, it's only used when nbest > 1
-        public static uint crf_max_word_num;
+        public int crf_max_word_num;
 
-        public DecoderTagger(int nbest, uint this_crf_max_word_num = Utils.DEFAULT_CRF_MAX_WORD_NUM)
+        public DecoderTagger(int nbest, int this_crf_max_word_num = Utils.DEFAULT_CRF_MAX_WORD_NUM)
         {
             crf_max_word_num = this_crf_max_word_num;
             vlevel_ = 0;
@@ -79,7 +79,7 @@ namespace CRFSharp
             {
                 feature_cache_every_row_size = featureIndex.bigram_templs_.Count + 1;
             }
-            for (int i = 0; i < Utils.DEFAULT_CRF_MAX_WORD_NUM * 2; i++)
+            for (int i = 0; i < crf_max_word_num * 2; i++)
             {
                 long[] features = new long[feature_cache_every_row_size];
                 for (int j = 0; j < feature_cache_every_row_size; j++)
@@ -138,11 +138,11 @@ namespace CRFSharp
             //Initialize feature set cache according unigram and bigram templates
             InitializeFeatureCache();
 
-            node_ = new Node[Utils.DEFAULT_CRF_MAX_WORD_NUM, ysize_];
-            result_ = new short[Utils.DEFAULT_CRF_MAX_WORD_NUM];
+            node_ = new Node[crf_max_word_num, ysize_];
+            result_ = new short[crf_max_word_num];
 
             //Create node and path cache
-            for (short cur = 0; cur < Utils.DEFAULT_CRF_MAX_WORD_NUM; cur++)
+            for (short cur = 0; cur < crf_max_word_num; cur++)
             {
                 for (short i = 0; i < ysize_; i++)
                 {
@@ -156,7 +156,7 @@ namespace CRFSharp
                 }
             }
 
-            for (int cur = 1; cur < Utils.DEFAULT_CRF_MAX_WORD_NUM; cur++)
+            for (int cur = 1; cur < crf_max_word_num; cur++)
             {
                 for (int j = 0; j < ysize_; ++j)
                 {
