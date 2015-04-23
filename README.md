@@ -1,6 +1,6 @@
 CRFSharp
 ========
-CRFSharp is Conditional Random Fields implemented by .NET(C#), a machine learning algorithm for learning from labeled sequences of examples.
+CRFSharp is Conditional Random Fields (CRF) implemented by .NET(C#), a machine learning algorithm for learning from labeled sequences of examples.
 
 ## Overview
 CRFSharp is Conditional Random Fields implemented by .NET(C#), a machine learning algorithm for learning from labeled sequences of examples. It is widely used in Natural Language Process (NLP) tasks, for example: word breaker, postaging, named entity recognized and so on.
