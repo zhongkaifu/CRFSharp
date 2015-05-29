@@ -49,7 +49,7 @@ namespace CRFSharp
 
         public void Shrink(int freq)
         {
-            int i = 0;
+            var i = 0;
             while (i < featureset_dict_.Count)
             {
                 if (featureset_dict_.ValueList[i].Value < freq)
@@ -67,7 +67,7 @@ namespace CRFSharp
         public void GenerateLexicalIdList(out IList<string> keyList, out IList<int> valList)
         {
             keyList = featureset_dict_.KeyList;
-            int [] fixArrayValue = new int[Size];
+            var fixArrayValue = new int[Size];
             valList = fixArrayValue;
 
 #if NO_SUPPORT_PARALLEL_LIB
@@ -89,14 +89,14 @@ namespace CRFSharp
         {
             long new_maxid = 0;
             //Regenerate new feature id and create feature ids mapping
-            foreach (KeyValuePair<string, FeatureIdPair> it in featureset_dict_)
+            foreach (var it in featureset_dict_)
             {
-                string strFeature = it.Key;
+                var strFeature = it.Key;
                 //Regenerate new feature id
                 old2new.Add(it.Value.Key, new_maxid);
                 it.Value.Key = new_maxid;
 
-                long addValue = (strFeature[0] == 'U' ? ysize : ysize * ysize);
+                var addValue = (strFeature[0] == 'U' ? ysize : ysize * ysize);
                 new_maxid += addValue;
             }
 
@@ -134,7 +134,7 @@ namespace CRFSharp
                     }
                     else
                     {
-                        long oldValue = Interlocked.Increment(ref maxid_) - 1;
+                        var oldValue = Interlocked.Increment(ref maxid_) - 1;
                         pair = new FeatureIdPair(oldValue, 1);
                         featureset_dict_.Add(key, pair);
                     }

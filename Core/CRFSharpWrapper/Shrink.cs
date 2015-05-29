@@ -11,12 +11,12 @@ namespace CRFSharpWrapper
     {
         public void Process(string strModelFileName, string strShrinkedModelFileName, int thread_num_ = 1)
         {
-            StreamReader sr = new StreamReader(strModelFileName);
+            var sr = new StreamReader(strModelFileName);
             string strLine;
 
             //读入版本号
             strLine = sr.ReadLine();
-            uint version = uint.Parse(strLine.Split(':')[1].Trim());
+            var version = uint.Parse(strLine.Split(':')[1].Trim());
             if (version == CRFSharp.Utils.MODEL_TYPE_SHRINKED)
             {
                 Console.WriteLine("The input model has been shrinked");
@@ -25,21 +25,21 @@ namespace CRFSharpWrapper
 
             //读入cost_factor
             strLine = sr.ReadLine();
-            double cost_factor_ = double.Parse(strLine.Split(':')[1].Trim());
+            var cost_factor_ = double.Parse(strLine.Split(':')[1].Trim());
 
             //读入maxid
             strLine = sr.ReadLine();
-            long maxid_ = long.Parse(strLine.Split(':')[1].Trim());
+            var maxid_ = long.Parse(strLine.Split(':')[1].Trim());
 
             //读入xsize
             strLine = sr.ReadLine();
-            uint xsize_ = uint.Parse(strLine.Split(':')[1].Trim());
+            var xsize_ = uint.Parse(strLine.Split(':')[1].Trim());
 
             //读入空行
             strLine = sr.ReadLine();
 
             //读入待标注的标签
-            List<string> y_ = new List<string>();
+            var y_ = new List<string>();
             while (true)
             {
                 strLine = sr.ReadLine();
@@ -51,8 +51,8 @@ namespace CRFSharpWrapper
             }
 
             //读入unigram和bigram模板
-            List<string> unigram_templs_ = new List<string>();
-            List<string> bigram_templs_ = new List<string>();
+            var unigram_templs_ = new List<string>();
+            var bigram_templs_ = new List<string>();
             while (sr.EndOfStream == false)
             {
                 strLine = sr.ReadLine();
@@ -73,17 +73,17 @@ namespace CRFSharpWrapper
 
 
             //Load all features alpha data
-            string filename_alpha = strModelFileName + ".alpha";
-            string filename_shrink_alpha = strShrinkedModelFileName + ".alpha";
-            StreamReader sr_alpha = new StreamReader(filename_alpha);
-            BinaryReader br_alpha = new BinaryReader(sr_alpha.BaseStream);
+            var filename_alpha = strModelFileName + ".alpha";
+            var filename_shrink_alpha = strShrinkedModelFileName + ".alpha";
+            var sr_alpha = new StreamReader(filename_alpha);
+            var br_alpha = new BinaryReader(sr_alpha.BaseStream);
 
-            StreamWriter sw_alpha = new StreamWriter(filename_shrink_alpha);
-            BinaryWriter bw_alpha = new BinaryWriter(sw_alpha.BaseStream);
+            var sw_alpha = new StreamWriter(filename_shrink_alpha);
+            var bw_alpha = new BinaryWriter(sw_alpha.BaseStream);
             long shrinked_alpha_size = 0;
 
             //Only reserve non-zero feature weights and save them into file as two-tuples format
-            FixedBigArray<double> alpha_ = new FixedBigArray<double>(maxid_ + 1, 0);
+            var alpha_ = new FixedBigArray<double>(maxid_ + 1, 0);
             for (long i = 0; i < maxid_; i++)
             {
                 alpha_[i] = br_alpha.ReadSingle();
@@ -99,20 +99,20 @@ namespace CRFSharpWrapper
             bw_alpha.Close();
 
             //Only reserved lexical feature whose weights is non-zero
-            VarBigArray<int> varValue = new VarBigArray<int>(1024);
-            VarBigArray<string> varFeature = new VarBigArray<string>(1024);
-            int feaCnt = 0;
-            string filename_feature = strModelFileName + ".feature.raw_text";
-            StreamReader sr_fea = new StreamReader(filename_feature);
+            var varValue = new VarBigArray<int>(1024);
+            var varFeature = new VarBigArray<string>(1024);
+            var feaCnt = 0;
+            var filename_feature = strModelFileName + ".feature.raw_text";
+            var sr_fea = new StreamReader(filename_feature);
             while (sr_fea.EndOfStream == false)
             {
                 strLine = sr_fea.ReadLine();
-                string[] items = strLine.Split('\t');
-                string strFeature = items[0];
-                int key = int.Parse(items[1]);
-                int size = (strFeature[0] == 'U' ? y_.Count : y_.Count * y_.Count);
-                bool hasAlpha = false;
-                for (int i = key; i < key + size; i++)
+                var items = strLine.Split('\t');
+                var strFeature = items[0];
+                var key = int.Parse(items[1]);
+                var size = (strFeature[0] == 'U' ? y_.Count : y_.Count * y_.Count);
+                var hasAlpha = false;
+                for (var i = key; i < key + size; i++)
                 {
                     if (alpha_[i] != 0)
                     {
@@ -135,16 +135,16 @@ namespace CRFSharpWrapper
             maxid_ = shrinked_alpha_size;
 
             //Build new lexical feature
-            FixedBigArray<int> val = new FixedBigArray<int>(feaCnt, 0);
-            FixedBigArray<string> fea = new FixedBigArray<string>(feaCnt, 0);
-            for (int i = 0; i < feaCnt; i++)
+            var val = new FixedBigArray<int>(feaCnt, 0);
+            var fea = new FixedBigArray<string>(feaCnt, 0);
+            for (var i = 0; i < feaCnt; i++)
             {
                 fea[i] = varFeature[i];
                 val[i] = varValue[i];
             }
             varFeature = null;
             varValue = null;
-            DoubleArrayTrieBuilder da = new DoubleArrayTrieBuilder(thread_num_);
+            var da = new DoubleArrayTrieBuilder(thread_num_);
             if (da.build(fea, val, 0.95) == false)
             {
                 Console.WriteLine("Build lexical dictionary failed.");
@@ -152,7 +152,7 @@ namespace CRFSharpWrapper
             }
             da.save(strShrinkedModelFileName + ".feature");
 
-            StreamWriter tofs = new StreamWriter(strShrinkedModelFileName);
+            var tofs = new StreamWriter(strShrinkedModelFileName);
 
             // header
             tofs.WriteLine("version: " + CRFSharp.Utils.MODEL_TYPE_SHRINKED);
@@ -163,18 +163,18 @@ namespace CRFSharpWrapper
             tofs.WriteLine();
 
             // y
-            for (int i = 0; i < y_.Count; ++i)
+            for (var i = 0; i < y_.Count; ++i)
             {
                 tofs.WriteLine(y_[i]);
             }
             tofs.WriteLine();
 
             // template
-            for (int i = 0; i < unigram_templs_.Count; ++i)
+            for (var i = 0; i < unigram_templs_.Count; ++i)
             {
                 tofs.WriteLine(unigram_templs_[i]);
             }
-            for (int i = 0; i < bigram_templs_.Count; ++i)
+            for (var i = 0; i < bigram_templs_.Count; ++i)
             {
                 tofs.WriteLine(bigram_templs_[i]);
             }

@@ -10,15 +10,15 @@ namespace CRFSharpConsole
     {
         public void Run(string [] args)
         {
-            CRFSharpWrapper.Encoder encoder = new CRFSharpWrapper.Encoder();
-            CRFSharpWrapper.EncoderArgs options = new EncoderArgs();
+            var encoder = new CRFSharpWrapper.Encoder();
+            var options = new EncoderArgs();
 
-            for (int i = 0; i < args.Length; i++)
+            for (var i = 0; i < args.Length; i++)
             {
                 if (args[i][0] == '-')
                 {
-                    string key = args[i].Substring(1).ToLower().Trim();
-                    string value = "";
+                    var key = args[i].Substring(1).ToLower().Trim();
+                    var value = "";
 
                     if (key == "encode")
                     {
@@ -33,7 +33,7 @@ namespace CRFSharpConsole
                         {
                             if (i < args.Length - 1)
                             {
-                                int debugLevel = int.Parse(args[i + 1]);
+                                var debugLevel = int.Parse(args[i + 1]);
                                 options.debugLevel = debugLevel;
                                 i++;
                             }
@@ -96,7 +96,7 @@ namespace CRFSharpConsole
                                 }
                                 break;
                             default:
-                                ConsoleColor cc = Console.ForegroundColor;
+                                var cc = Console.ForegroundColor;
                                 Console.ForegroundColor = ConsoleColor.Red;
                                 Console.WriteLine("No supported {0} parameter, exit", key);
                                 Console.ForegroundColor = cc;
@@ -106,7 +106,7 @@ namespace CRFSharpConsole
                     }
                     else
                     {
-                        ConsoleColor cc = Console.ForegroundColor;
+                        var cc = Console.ForegroundColor;
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.WriteLine("{0} is invalidated parameter.", key);
                         Console.ForegroundColor = cc;

@@ -42,9 +42,9 @@ namespace CRFSharp
             }
             i++;
 
-            int col = 0;
-            int row = 0;
-            int neg = 1;
+            var col = 0;
+            var row = 0;
+            var neg = 1;
 
             if (p[i] == '-')
             {
@@ -90,7 +90,7 @@ namespace CRFSharp
             {
                 return null;
             }
-            int idx = pos + row;
+            var idx = pos + row;
             if (idx < 0)
             {
                 return "_B-" + (-idx).ToString();
@@ -105,9 +105,9 @@ namespace CRFSharp
 
         public string apply_rule(string p, int pos, Tagger tagger)
         {
-            StringBuilder feature_function = new StringBuilder();
+            var feature_function = new StringBuilder();
             string r;
-            for (int i = 0; i < p.Length; i++)
+            for (var i = 0; i < p.Length; i++)
             {
                 if (p[i] == '%')
                 {

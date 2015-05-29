@@ -32,13 +32,13 @@ namespace CRFSharpConsole
 
         public void Run(string[] args)
         {
-            CRFSharpWrapper.DecoderArgs options = new DecoderArgs();
-            for (int i = 0; i < args.Length; i++)
+            var options = new DecoderArgs();
+            for (var i = 0; i < args.Length; i++)
             {
                 if (args[i][0] == '-')
                 {
-                    string key = args[i].Substring(1).ToLower().Trim();
-                    string value = "";
+                    var key = args[i].Substring(1).ToLower().Trim();
+                    var value = "";
 
                     if (key == "decode")
                     {
@@ -76,7 +76,7 @@ namespace CRFSharpConsole
                                 break;
 
                             default:
-                                ConsoleColor cc = Console.ForegroundColor;
+                                var cc = Console.ForegroundColor;
                                 Console.ForegroundColor = ConsoleColor.Red;
                                 Console.WriteLine("No supported {0} parameter, exit", key);
                                 Console.ForegroundColor = cc;
@@ -86,7 +86,7 @@ namespace CRFSharpConsole
                     }
                     else
                     {
-                        ConsoleColor cc = Console.ForegroundColor;
+                        var cc = Console.ForegroundColor;
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.WriteLine("{0} is invalidated parameter.", key);
                         Console.ForegroundColor = cc;
@@ -109,7 +109,7 @@ namespace CRFSharpConsole
 
         bool Decode(CRFSharpWrapper.DecoderArgs options)
         {
-            ParallelOptions parallelOption = new ParallelOptions();
+            var parallelOption = new ParallelOptions();
 
             if (File.Exists(options.strInputFileName) == false)
             {
@@ -123,7 +123,7 @@ namespace CRFSharpConsole
                 return false;
             }
 
-            StreamReader sr = new StreamReader(options.strInputFileName);
+            var sr = new StreamReader(options.strInputFileName);
             StreamWriter sw = null, swSeg = null;
 
             if (options.strOutputFileName != null && options.strOutputFileName.Length > 0)
@@ -136,32 +136,32 @@ namespace CRFSharpConsole
             }
 
             //Create CRFSharp wrapper instance. It's a global instance
-            CRFSharpWrapper.Decoder crfWrapper = new CRFSharpWrapper.Decoder();
+            var crfWrapper = new CRFSharpWrapper.Decoder();
             //Load model from file
             if (crfWrapper.LoadModel(options.strModelFileName) == false)
             {
                 return false;
             }
 
-            ConcurrentQueue<List<List<string>>> queueRecords = new ConcurrentQueue<List<List<string>>>();
-            ConcurrentQueue<List<List<string>>> queueSegRecords = new ConcurrentQueue<List<List<string>>>();
+            var queueRecords = new ConcurrentQueue<List<List<string>>>();
+            var queueSegRecords = new ConcurrentQueue<List<List<string>>>();
 
             parallelOption.MaxDegreeOfParallelism = options.thread;
             Parallel.For(0, options.thread, parallelOption, t =>
                 {
 
                     //Create decoder tagger instance. If the running environment is multi-threads, each thread needs a separated instance
-                    SegDecoderTagger tagger = crfWrapper.CreateTagger(options.nBest, options.maxword);
+                    var tagger = crfWrapper.CreateTagger(options.nBest, options.maxword);
                     tagger.set_vlevel(options.probLevel);
 
                     //Initialize result
-                    crf_seg_out[] crf_out = new crf_seg_out[options.nBest];
-                    for (int i = 0; i < options.nBest; i++)
+                    var crf_out = new crf_seg_out[options.nBest];
+                    for (var i = 0; i < options.nBest; i++)
                     {
                         crf_out[i] = new crf_seg_out(tagger.crf_max_word_num);
                     }
 
-                    List<List<string>> inbuf = new List<List<string>>();
+                    var inbuf = new List<List<string>>();
                     while (true)
                     {
                         lock (rdLocker)
@@ -189,13 +189,14 @@ namespace CRFSharpConsole
                         //Save segmented tagged result into file
                         if (swSeg != null)
                         {
-                            List<string> rstList = ConvertCRFTermOutToStringList(inbuf, crf_out);
+                            var rstList = ConvertCRFTermOutToStringList(inbuf, crf_out);
                             while (peek != inbuf)
                             {
                                 queueSegRecords.TryPeek(out peek);
                             }
-                            foreach (string item in rstList)
+                            for (int index = 0; index < rstList.Count; index++)
                             {
+                                var item = rstList[index];
                                 swSeg.WriteLine(item);
                             }
                             queueSegRecords.TryDequeue(out peek);
@@ -237,7 +238,7 @@ namespace CRFSharpConsole
 
             while (true)
             {
-                string strLine = sr.ReadLine();
+                var strLine = sr.ReadLine();
                 if (strLine == null)
                 {
                     //At the end of current file
@@ -257,10 +258,11 @@ namespace CRFSharpConsole
                 }
 
                 //Read feature set for each record
-                string[] items = strLine.Split(new char[] { '\t' });
+                var items = strLine.Split(new char[] { '\t' });
                 inbuf.Add(new List<string>());
-                foreach (string item in items)
+                for (int index = 0; index < items.Length; index++)
                 {
+                    var item = items[index];
                     inbuf[inbuf.Count - 1].Add(item);
                 }
             }
@@ -269,7 +271,7 @@ namespace CRFSharpConsole
         //Output raw result with probability
         private void OutputRawResultToFile(List<List<string>> inbuf, crf_term_out[] crf_out, SegDecoderTagger tagger, StreamWriter sw)
         {
-            for (int k = 0; k < crf_out.Length; k++)
+            for (var k = 0; k < crf_out.Length; k++)
             {
                 if (crf_out[k] == null)
                 {
@@ -277,15 +279,15 @@ namespace CRFSharpConsole
                     break;
                 }
 
-                StringBuilder sb = new StringBuilder();
+                var sb = new StringBuilder();
 
-                crf_term_out crf_seg_out = crf_out[k];
+                var crf_seg_out = crf_out[k];
                 //Show the entire sequence probability
                 //For each token
-                for (int i = 0; i < inbuf.Count; i++)
+                for (var i = 0; i < inbuf.Count; i++)
                 {
                     //Show all features
-                    for (int j = 0; j < inbuf[i].Count; j++)
+                    for (var j = 0; j < inbuf[i].Count; j++)
                     {
                         sb.Append(inbuf[i][j]);
                         sb.Append("\t");
@@ -301,7 +303,7 @@ namespace CRFSharpConsole
 
                         //Show the probability of all tags
                         sb.Append("\t");
-                        for (int j = 0; j < tagger.ysize_; j++)
+                        for (var j = 0; j < tagger.ysize_; j++)
                         {
                             sb.Append(tagger.yname(j));
                             sb.Append("/");
@@ -327,15 +329,15 @@ namespace CRFSharpConsole
         //Convert CRFSharp output format to string list
         private List<string> ConvertCRFTermOutToStringList(List<List<string>> inbuf, crf_seg_out[] crf_out)
         {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < inbuf.Count; i++)
+            var sb = new StringBuilder();
+            for (var i = 0; i < inbuf.Count; i++)
             {
                 sb.Append(inbuf[i][0]);
             }
 
-            string strText = sb.ToString();
-            List<string> rstList = new List<string>();
-            for (int i = 0; i < crf_out.Length; i++)
+            var strText = sb.ToString();
+            var rstList = new List<string>();
+            for (var i = 0; i < crf_out.Length; i++)
             {
                 if (crf_out[i] == null)
                 {
@@ -344,11 +346,11 @@ namespace CRFSharpConsole
                 }
 
                 sb.Clear();
-                crf_seg_out crf_term_out = crf_out[i];
-                for (int j = 0; j < crf_term_out.Count; j++)
+                var crf_term_out = crf_out[i];
+                for (var j = 0; j < crf_term_out.Count; j++)
                 {
-                    string str = strText.Substring(crf_term_out.tokenList[j].offset, crf_term_out.tokenList[j].length);
-                    string strNE = crf_term_out.tokenList[j].strTag;
+                    var str = strText.Substring(crf_term_out.tokenList[j].offset, crf_term_out.tokenList[j].length);
+                    var strNE = crf_term_out.tokenList[j].strTag;
 
                     sb.Append(str);
                     if (strNE.Length > 0)

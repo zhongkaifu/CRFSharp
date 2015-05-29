@@ -16,7 +16,7 @@ namespace CRFSharpConsole
                 return;
             }
 
-            CRFSharpWrapper.Shrink shrink = new Shrink();
+            var shrink = new Shrink();
             shrink.Process(args[1], args[2], int.Parse(args[3]));
         }
     }

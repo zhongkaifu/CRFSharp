@@ -28,9 +28,9 @@ namespace CRFSharp
                 return;
             }
 
-            short ysize_ = x[0].ysize_;
+            var ysize_ = x[0].ysize_;
             max_xsize_ = 0;
-            for (int i = start_i; i < x.Length; i += thread_num)
+            for (var i = start_i; i < x.Length; i += thread_num)
             {
                 if (max_xsize_ < x[i].word_num)
                 {
@@ -40,9 +40,9 @@ namespace CRFSharp
 
             result_ = new short[max_xsize_];
             node_ = new Node[max_xsize_, ysize_];
-            for (int i = 0; i < max_xsize_; i++)
+            for (var i = 0; i < max_xsize_; i++)
             {
-                for (int j = 0; j < ysize_; j++)
+                for (var j = 0; j < ysize_; j++)
                 {
                     node_[i, j] = new Node();
                     node_[i, j].x = (short)i;
@@ -58,7 +58,7 @@ namespace CRFSharp
                 {
                     for (short i = 0; i < ysize_; ++i)
                     {
-                        Path path = new Path();
+                        var path = new Path();
                         path.fid = -1;
                         path.cost = 0.0;
                         path.add(node_[cur - 1, j], node_[cur, i]);
@@ -76,11 +76,11 @@ namespace CRFSharp
             err = zeroone = 0;
             //expected.Clear();
             Array.Clear(merr, 0, merr.Length);
-            for (int i = start_i; i < x.Length; i += thread_num)
+            for (var i = start_i; i < x.Length; i += thread_num)
             {
                 x[i].Init(result_, node_);
                 obj += x[i].gradient(lbfgs.expected);
-                int error_num = x[i].eval(merr);
+                var error_num = x[i].eval(merr);
                 err += error_num;
                 if (error_num > 0)
                 {

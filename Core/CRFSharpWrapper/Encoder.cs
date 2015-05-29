@@ -19,11 +19,6 @@ namespace CRFSharpWrapper
     {
         public enum REG_TYPE { L1, L2 };
 
-        public Encoder()
-        {
-
-        }
-
         //encoding CRF model from training corpus
         public bool Learn(EncoderArgs args)
         {
@@ -51,7 +46,7 @@ namespace CRFSharpWrapper
             }
 
             Console.WriteLine("Open and check training corpus and templates...");
-            ModelWritter modelWritter = new ModelWritter(args.threads_num, args.C, args.hugeLexMemLoad);
+            var modelWritter = new ModelWritter(args.threads_num, args.C, args.hugeLexMemLoad);
             if (modelWritter.Open(args.strTemplateFileName, args.strTrainingCorpus) == false)
             {
                 Console.WriteLine("Open training corpus or template file failed.");
@@ -59,8 +54,8 @@ namespace CRFSharpWrapper
             }
 
             Console.WriteLine("Load training data and generate lexical features: ");
-            EncoderTagger[] xList = modelWritter.ReadAllRecords();
-            
+            var xList = modelWritter.ReadAllRecords();
+
             Console.WriteLine();
 
             Console.WriteLine("Shrinking feature set [frequency is less than {0}]...", args.min_feature_freq);
@@ -96,7 +91,7 @@ namespace CRFSharpWrapper
             Console.WriteLine("eta:                 " + args.min_diff);
             Console.WriteLine("C:                   " + args.C);
 
-            bool orthant = false;
+            var orthant = false;
             if (args.regType == REG_TYPE.L1)
             {
                 orthant = true;
@@ -122,23 +117,23 @@ namespace CRFSharpWrapper
 
         bool runCRF(EncoderTagger[] x, ModelWritter modelWritter, bool orthant, EncoderArgs args)
         {
-            double old_obj = double.MaxValue;
-            int converge = 0;
-            LBFGS lbfgs = new LBFGS(args.threads_num);
+            var old_obj = double.MaxValue;
+            var converge = 0;
+            var lbfgs = new LBFGS(args.threads_num);
             lbfgs.expected = new double[modelWritter.feature_size() + 1];
 
-            List<CRFEncoderThread> processList = new List<CRFEncoderThread>();
+            var processList = new List<CRFEncoderThread>();
 
 #if NO_SUPPORT_PARALLEL_LIB
 #else
-            ParallelOptions parallelOption = new ParallelOptions();
+            var parallelOption = new ParallelOptions();
             parallelOption.MaxDegreeOfParallelism = args.threads_num;
 #endif
 
             //Initialize encoding threads
-            for (int i = 0; i < args.threads_num; i++)
+            for (var i = 0; i < args.threads_num; i++)
             {
-                CRFEncoderThread thread = new CRFEncoderThread();
+                var thread = new CRFEncoderThread();
                 thread.start_i = i;
                 thread.thread_num = args.threads_num;
                 thread.x = x;
@@ -148,22 +143,23 @@ namespace CRFSharpWrapper
             }
 
             //Statistic term and result tags frequency
-            int termNum = 0;
+            var termNum = 0;
             int[] yfreq;
             yfreq = new int[modelWritter.y_.Count];
-            foreach (EncoderTagger tagger in x)
+            for (int index = 0; index < x.Length; index++)
             {
+                var tagger = x[index];
                 termNum += tagger.word_num;
-                for (int j = 0; j < tagger.word_num; j++)
+                for (var j = 0; j < tagger.word_num; j++)
                 {
                     yfreq[tagger.answer_[j]]++;
                 }
             }
 
             //Iterative training
-            DateTime startDT = DateTime.Now;
-            double dMinErrRecord = 1.0;
-            for (int itr = 0; itr < args.max_iter; ++itr)
+            var startDT = DateTime.Now;
+            var dMinErrRecord = 1.0;
+            for (var itr = 0; itr < args.max_iter; ++itr)
             {
                 //Clear result container
                 lbfgs.obj = 0.0f;
@@ -172,17 +168,17 @@ namespace CRFSharpWrapper
 
                 Array.Clear(lbfgs.expected, 0, lbfgs.expected.Length);
 
-                List<Thread> threadList = new List<Thread>();
-                for (int i = 0; i < args.threads_num; i++)
+                var threadList = new List<Thread>();
+                for (var i = 0; i < args.threads_num; i++)
                 {
-                    Thread thread = new Thread(new ThreadStart(processList[i].Run));
+                    var thread = new Thread(new ThreadStart(processList[i].Run));
                     thread.Start();
                     threadList.Add(thread);
                 }
 
                 int[,] merr;
                 merr = new int[modelWritter.y_.Count, modelWritter.y_.Count];
-                for (int i = 0; i < args.threads_num; ++i)
+                for (var i = 0; i < args.threads_num; ++i)
                 {
                     threadList[i].Join();
                     lbfgs.obj += processList[i].obj;
@@ -190,9 +186,9 @@ namespace CRFSharpWrapper
                     lbfgs.zeroone += processList[i].zeroone;
 
                     //Calculate error
-                    for (int j = 0; j < modelWritter.y_.Count; j++)
+                    for (var j = 0; j < modelWritter.y_.Count; j++)
                     {
-                        for (int k = 0; k < modelWritter.y_.Count; k++)
+                        for (var k = 0; k < modelWritter.y_.Count; k++)
                         {
                             merr[j, k] += processList[i].merr[j, k];
                         }
@@ -200,8 +196,8 @@ namespace CRFSharpWrapper
                 }
 
                 long num_nonzero = 0;
-                long fsize = modelWritter.feature_size();
-                double[] alpha = modelWritter.alpha_;
+                var fsize = modelWritter.feature_size();
+                var alpha = modelWritter.alpha_;
                 if (orthant == true)
                 {
                     //L1 regularization
@@ -272,7 +268,7 @@ namespace CRFSharpWrapper
                 }
 
                 //Show each iteration result
-                double diff = (itr == 0 ? 1.0f : Math.Abs(old_obj - lbfgs.obj) / old_obj);
+                var diff = (itr == 0 ? 1.0f : Math.Abs(old_obj - lbfgs.obj) / old_obj);
                 old_obj = lbfgs.obj;
 
                 ShowEvaluation(x.Length, modelWritter, lbfgs, termNum, itr, merr, yfreq, diff, startDT, num_nonzero, args);
@@ -291,7 +287,7 @@ namespace CRFSharpWrapper
 
                 if (args.debugLevel > 0 && (double)lbfgs.zeroone / (double)x.Length < dMinErrRecord)
                 {
-                    ConsoleColor cc = Console.ForegroundColor;
+                    var cc = Console.ForegroundColor;
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.Write("[Debug Mode] ");
                     Console.ForegroundColor = cc;
@@ -300,7 +296,7 @@ namespace CRFSharpWrapper
                     //Save current best feature weight into file
                     dMinErrRecord = (double)lbfgs.zeroone / (double)x.Length;
                     modelWritter.SaveFeatureWeight("feature_weight_tmp");
-                    
+
                     Console.WriteLine("Done.");
                 }
 
@@ -317,18 +313,18 @@ namespace CRFSharpWrapper
 
         private static void ShowEvaluation(int recordNum, ModelWritter feature_index, LBFGS lbfgs, int termNum, int itr, int[,] merr, int[] yfreq, double diff, DateTime startDT, long nonzero_feature_num, EncoderArgs args)
         {
-            TimeSpan ts = DateTime.Now - startDT;
+            var ts = DateTime.Now - startDT;
 
             if (args.debugLevel > 1)
             {
-                for (int i = 0; i < feature_index.y_.Count; i++)
+                for (var i = 0; i < feature_index.y_.Count; i++)
                 {
-                    int total_merr = 0;
-                    SortedDictionary<double, List<string>> sdict = new SortedDictionary<double, List<string>>();
-                    for (int j = 0; j < feature_index.y_.Count; j++)
+                    var total_merr = 0;
+                    var sdict = new SortedDictionary<double, List<string>>();
+                    for (var j = 0; j < feature_index.y_.Count; j++)
                     {
                         total_merr += merr[i, j];
-                        double v = (double)merr[i, j] / (double)yfreq[i];
+                        var v = (double)merr[i, j] / (double)yfreq[i];
                         if (v > 0.0001)
                         {
                             if (sdict.ContainsKey(v) == false)
@@ -338,7 +334,7 @@ namespace CRFSharpWrapper
                             sdict[v].Add(feature_index.y_[j]);
                         }
                     }
-                    double vet = (double)total_merr / (double)yfreq[i];
+                    var vet = (double)total_merr / (double)yfreq[i];
                     vet = vet * 100.0F;
 
                     Console.ForegroundColor = ConsoleColor.Green;
@@ -350,11 +346,12 @@ namespace CRFSharpWrapper
                     Console.ResetColor();
                     Console.WriteLine("]");
 
-                    int n = 0;
-                    foreach (KeyValuePair<double, List<string>> pair in sdict.Reverse())
+                    var n = 0;
+                    foreach (var pair in sdict.Reverse())
                     {
-                        foreach (string item in pair.Value)
+                        for (int index = 0; index < pair.Value.Count; index++)
                         {
+                            var item = pair.Value[index];
                             n += item.Length + 1 + 7;
                             if (n > 80)
                             {
@@ -375,7 +372,7 @@ namespace CRFSharpWrapper
                 }
             }
 
-            double act_feature_rate = (double)(nonzero_feature_num) / (double)(feature_index.feature_size()) * 100.0;
+            var act_feature_rate = (double)(nonzero_feature_num) / (double)(feature_index.feature_size()) * 100.0;
             Console.WriteLine("iter={0} terr={1:0.00000} serr={2:0.00000} diff={3:0.000000} fsize={4}({5:0.00}% act)", itr, 1.0 * lbfgs.err / termNum, 1.0 * lbfgs.zeroone / recordNum, diff, feature_index.feature_size(), act_feature_rate);
             Console.WriteLine("Time span: {0}, Aver. time span per iter: {1}", ts, new TimeSpan(0, 0, (int)(ts.TotalSeconds / (itr + 1))));
         }

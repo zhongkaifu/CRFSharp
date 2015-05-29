@@ -70,7 +70,7 @@ namespace CRFSharp
         public void InitializeFeatureCache()
         {
             feature_cache_ = new List<long[]>();
-            int feature_cache_every_row_size = 0;
+            var feature_cache_every_row_size = 0;
             if (featureIndex.unigram_templs_.Count > featureIndex.bigram_templs_.Count)
             {
                 feature_cache_every_row_size = featureIndex.unigram_templs_.Count + 1;
@@ -79,10 +79,10 @@ namespace CRFSharp
             {
                 feature_cache_every_row_size = featureIndex.bigram_templs_.Count + 1;
             }
-            for (int i = 0; i < crf_max_word_num * 2; i++)
+            for (var i = 0; i < crf_max_word_num * 2; i++)
             {
-                long[] features = new long[feature_cache_every_row_size];
-                for (int j = 0; j < feature_cache_every_row_size; j++)
+                var features = new long[feature_cache_every_row_size];
+                for (var j = 0; j < feature_cache_every_row_size; j++)
                 {
                     features[j] = -1;
                 }
@@ -146,7 +146,7 @@ namespace CRFSharp
             {
                 for (short i = 0; i < ysize_; i++)
                 {
-                    Node n = new Node();
+                    var n = new Node();
                     node_[cur, i] = n;
 
                     n.lpathList = new List<Path>();
@@ -156,13 +156,13 @@ namespace CRFSharp
                 }
             }
 
-            for (int cur = 1; cur < crf_max_word_num; cur++)
+            for (var cur = 1; cur < crf_max_word_num; cur++)
             {
-                for (int j = 0; j < ysize_; ++j)
+                for (var j = 0; j < ysize_; ++j)
                 {
-                    for (int i = 0; i < ysize_; ++i)
+                    for (var i = 0; i < ysize_; ++i)
                     {
-                        CRFSharp.Path p = new CRFSharp.Path();
+                        var p = new CRFSharp.Path();
                         p.add(node_[cur - 1, j], node_[cur, i]);
                     }
                 }
@@ -173,10 +173,10 @@ namespace CRFSharp
 
         public int initNbest()
         {
-            int k = (int)word_num - 1;
-            for (int i = 0; i < ysize_; ++i)
+            var k = (int)word_num - 1;
+            for (var i = 0; i < ysize_; ++i)
             {
-                QueueElement eos = Utils.allc_from_heap(heap_queue);
+                var eos = Utils.allc_from_heap(heap_queue);
                 eos.node = node_[k,i];
                 eos.fx = -node_[k,i].bestCost;
                 eos.gx = -node_[k,i].cost;
@@ -193,12 +193,12 @@ namespace CRFSharp
         {
             while (!Utils.is_heap_empty(heap_queue))
             {
-                QueueElement top = Utils.heap_delete_min(heap_queue);
-                Node rnode = top.node;
+                var top = Utils.heap_delete_min(heap_queue);
+                var rnode = top.node;
 
                 if (rnode.x == 0)
                 {
-                    for (QueueElement n = top; n != null; n = n.next)
+                    for (var n = top; n != null; n = n.next)
                     {
                         result_[n.node.x] = n.node.y;
                     }
@@ -206,10 +206,11 @@ namespace CRFSharp
                     return 0;
                 }
 
-                foreach (Path p in rnode.lpathList)
+                for (int index = 0; index < rnode.lpathList.Count; index++)
                 {
-                    QueueElement n = Utils.allc_from_heap(heap_queue);
-                    int x_num = (rnode.x) - 1;
+                    var p = rnode.lpathList[index];
+                    var n = Utils.allc_from_heap(heap_queue);
+                    var x_num = (rnode.x) - 1;
                     n.node = p.lnode;
                     n.gx = -p.lnode.cost - p.cost + top.gx;
                     n.fx = -p.lnode.bestCost - p.cost + top.gx;
@@ -219,7 +220,6 @@ namespace CRFSharp
                     {
                         return Utils.ERROR_INSERT_HEAP_FAILED;
                     }
-
                 }
             }
             return 0;
@@ -240,13 +240,14 @@ namespace CRFSharp
             //Generate feature ids for all nodes and paths
             RebuildFeatures();
 
-            for (int i = 0; i < word_num; i++)
+            for (var i = 0; i < word_num; i++)
             {
-                for (int j = 0; j < ysize_; j++)
+                for (var j = 0; j < ysize_; j++)
                 {
                     calcCost(node_[i, j]);
-                    foreach (Path p in node_[i, j].lpathList)
+                    for (int index = 0; index < node_[i, j].lpathList.Count; index++)
                     {
+                        var p = node_[i, j].lpathList[index];
                         calcCost(p);
                     }
                 }
@@ -272,9 +273,9 @@ namespace CRFSharp
                 term_buf.prob = prob();
             }
 
-            short this_word_num = get_word_num();
+            var this_word_num = get_word_num();
 
-            for (int i = 0; i < this_word_num; ++i)
+            for (var i = 0; i < this_word_num; ++i)
             {
                 term_buf.result_[i] = yname(result_[i]);
                 switch (vlevel_)
@@ -295,7 +296,7 @@ namespace CRFSharp
         //Returen value: Successed - 0, Failed < 0
         public int parse()
         {
-            int ret = 0;
+            var ret = 0;
             //no word need to be labeled
             if (word_num == 0)
             {
@@ -354,15 +355,16 @@ namespace CRFSharp
                 return Utils.ERROR_INVALIDATED_PARAMETER;
             }
 
-            int id = 0;
-            int feature_cache_row_size = 0;
-            int feature_cache_size = 0;
-            for (int cur = 0; cur < word_num; cur++)
+            var id = 0;
+            var feature_cache_row_size = 0;
+            var feature_cache_size = 0;
+            for (var cur = 0; cur < word_num; cur++)
             {
                 feature_cache_row_size = 0;
-                foreach (string templ in featureIndex.unigram_templs_)
+                for (int index = 0; index < featureIndex.unigram_templs_.Count; index++)
                 {
-                    string strFeature = featureIndex.apply_rule(templ, cur, this);
+                    var templ = featureIndex.unigram_templs_[index];
+                    var strFeature = featureIndex.apply_rule(templ, cur, this);
                     if (strFeature == "")
                     {
                         return Utils.ERROR_EMPTY_FEATURE;
@@ -378,12 +380,13 @@ namespace CRFSharp
                 feature_cache_size++;
             }
 
-            for (int cur = 0; cur < word_num; cur++)
+            for (var cur = 0; cur < word_num; cur++)
             {
                 feature_cache_row_size = 0;
-                foreach (string templ in featureIndex.bigram_templs_)
+                for (int index = 0; index < featureIndex.bigram_templs_.Count; index++)
                 {
-                    string strFeature = featureIndex.apply_rule(templ, cur, this);
+                    var templ = featureIndex.bigram_templs_[index];
+                    var strFeature = featureIndex.apply_rule(templ, cur, this);
                     if (strFeature == "")
                     {
                         return Utils.ERROR_EMPTY_FEATURE;
@@ -408,8 +411,8 @@ namespace CRFSharp
         public void calcCost(Node n)
         {
             double c = 0;
-            long[] f = feature_cache_[n.fid];
-            for (int i = 0; i < f.Length && f[i] != -1; i++)
+            var f = feature_cache_[n.fid];
+            for (var i = 0; i < f.Length && f[i] != -1; i++)
             {
                 c += featureIndex.GetAlpha(f[i] + n.y);
             }
@@ -419,8 +422,8 @@ namespace CRFSharp
         public void calcCost(CRFSharp.Path p)
         {
             double c = 0;
-            long[] f = feature_cache_[p.fid];
-            for (int i = 0; i < f.Length && f[i] != -1; i++)
+            var f = feature_cache_[p.fid];
+            for (var i = 0; i < f.Length && f[i] != -1; i++)
             {
                 c += featureIndex.GetAlpha((int)(f[i] + p.lnode.y * ysize_ + p.rnode.y));
             }
@@ -430,8 +433,8 @@ namespace CRFSharp
 
         public int output(crf_term_out[] pout)
         {
-            int n = 0;
-            int ret = 0;
+            var n = 0;
+            var ret = 0;
 
             if (nbest_ == 1)
             {
@@ -445,7 +448,7 @@ namespace CRFSharp
             else
             {
                 //Fill the n best result
-                int iNBest = nbest_;
+                var iNBest = nbest_;
                 if (pout.Length < iNBest)
                 {
                     iNBest = pout.Length;

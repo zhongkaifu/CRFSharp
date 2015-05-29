@@ -16,8 +16,8 @@ namespace CRFSharp
 
         public int eval(int[,] merr)
         {
-            int err = 0;
-            for (int i = 0; i < word_num; ++i)
+            var err = 0;
+            for (var i = 0; i < word_num; ++i)
             {
                 if (answer_[i] != result_[i])
                 {
@@ -43,12 +43,13 @@ namespace CRFSharp
             }
 
             //Try to find each record's answer tag
-            int x_num = 0;
-            int xsize = (int)feature_index_.xsize_;
+            var x_num = 0;
+            var xsize = (int)feature_index_.xsize_;
             answer_ = new short[word_num];
-            foreach (List<string> record in recordList)
+            for (int index = 0; index < recordList.Count; index++)
             {
-                //get result tag's index and fill answer
+                var record = recordList[index];
+//get result tag's index and fill answer
                 for (short k = 0; k < ysize_; ++k)
                 {
                     if (feature_index_.y(k) == record[xsize])
@@ -84,20 +85,23 @@ namespace CRFSharp
 
         private void calcExpectation(int x, int y, double[] expected)
         {
-            Node n = node_[x, y];
-            double c = Math.Exp(n.alpha + n.beta - n.cost - Z_);
-            int offset = y + 1; //since expected array is based on 1
-            foreach (long item in feature_cache_[n.fid])
+            var n = node_[x, y];
+            var c = Math.Exp(n.alpha + n.beta - n.cost - Z_);
+            var offset = y + 1; //since expected array is based on 1
+            for (int index = 0; index < feature_cache_[n.fid].Length; index++)
             {
+                var item = feature_cache_[n.fid][index];
                 LockFreeAdd(expected, item + offset, c);
             }
 
-            foreach (CRFSharp.Path p in n.lpathList)
+            for (int index = 0; index < n.lpathList.Count; index++)
             {
+                var p = n.lpathList[index];
                 c = Math.Exp(p.lnode.alpha + p.cost + p.rnode.beta - Z_);
                 offset = p.lnode.y * ysize_ + p.rnode.y + 1; //since expected array is based on 1
-                foreach (long item in feature_cache_[p.fid])
+                for (int i = 0; i < feature_cache_[p.fid].Length; i++)
                 {
+                    var item = feature_cache_[p.fid][i];
                     LockFreeAdd(expected, item + offset, c);
                 }
             }
@@ -107,39 +111,42 @@ namespace CRFSharp
         {
             buildLattice();
             forwardbackward();
-            double s = 0.0;
+            var s = 0.0;
 
-            for (int i = 0; i < word_num; ++i)
+            for (var i = 0; i < word_num; ++i)
             {
-                for (int j = 0; j < ysize_; ++j)
+                for (var j = 0; j < ysize_; ++j)
                 {
                     calcExpectation(i, j, expected);
                 }
             }
 
-            for (int i = 0; i < word_num; ++i)
+            for (var i = 0; i < word_num; ++i)
             {
-                short answer_val = answer_[i];
-                Node answer_Node = node_[i, answer_val];
-                int offset = answer_val + 1; //since expected array is based on 1
-                foreach (long fid in feature_cache_[answer_Node.fid])
+                var answer_val = answer_[i];
+                var answer_Node = node_[i, answer_val];
+                var offset = answer_val + 1; //since expected array is based on 1
+                for (int index = 0; index < feature_cache_[answer_Node.fid].Length; index++)
                 {
+                    var fid = feature_cache_[answer_Node.fid][index];
                     LockFreeAdd(expected, fid + offset, -1.0f);
                 }
                 s += answer_Node.cost;  // UNIGRAM cost
 
 
-                foreach (CRFSharp.Path lpath in answer_Node.lpathList)
+                for (int index = 0; index < answer_Node.lpathList.Count; index++)
                 {
+                    var lpath = answer_Node.lpathList[index];
                     if (lpath.lnode.y == answer_[lpath.lnode.x])
                     {
                         offset = lpath.lnode.y * ysize_ + lpath.rnode.y + 1;
-                        foreach (long fid in feature_cache_[lpath.fid])
+                        for (int index1 = 0; index1 < feature_cache_[lpath.fid].Length; index1++)
                         {
+                            var fid = feature_cache_[lpath.fid][index1];
                             LockFreeAdd(expected, fid + offset, -1.0f);
                         }
 
-                        s += lpath.cost;  // BIGRAM COST
+                        s += lpath.cost; // BIGRAM COST
                         break;
                     }
                 }
@@ -161,15 +168,16 @@ namespace CRFSharp
         public void buildLattice()
         {
             RebuildFeatures();
-            for (int i = 0; i < word_num; ++i)
+            for (var i = 0; i < word_num; ++i)
             {
-                for (int j = 0; j < ysize_; ++j)
+                for (var j = 0; j < ysize_; ++j)
                 {
-                    Node node_i_j = node_[i, j];
+                    var node_i_j = node_[i, j];
                     node_i_j.cost = calcCost(node_i_j.fid, j);
-                    foreach (CRFSharp.Path p in node_i_j.lpathList)
+                    for (int index = 0; index < node_i_j.lpathList.Count; index++)
                     {
-                        int offset = p.lnode.y * ysize_ + p.rnode.y;
+                        var p = node_i_j.lpathList[index];
+                        var offset = p.lnode.y * ysize_ + p.rnode.y;
                         p.cost = calcCost(p.fid, offset);
                     }
                 }
@@ -180,8 +188,9 @@ namespace CRFSharp
         {
             double c = 0.0f;
             offset++; //since alpha_ array is based on 1
-            foreach (int fid in feature_cache_[featureListIdx])
+            for (int index = 0; index < feature_cache_[featureListIdx].Length; index++)
             {
+                var fid = feature_cache_[featureListIdx][index];
                 c += feature_index_.alpha_[fid + offset];
             }
             return feature_index_.cost_factor_ * c;

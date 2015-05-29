@@ -102,7 +102,7 @@ namespace CRFSharp
 #else
         private long ParallelMerge(long startIndex, long endIndex, int freq)
         {
-            long sizePerThread = (endIndex - startIndex + 1) / parallelOption.MaxDegreeOfParallelism;
+            var sizePerThread = (endIndex - startIndex + 1) / parallelOption.MaxDegreeOfParallelism;
             //Fistly, merge items in each block by parallel
             Parallel.For(0, parallelOption.MaxDegreeOfParallelism, parallelOption, i =>
             {
@@ -124,7 +124,7 @@ namespace CRFSharp
         //Merge same items in sorted list
         private long Merge(long startIndex, long endIndex, int freq)
         {
-            long newEndIndex = startIndex;
+            var newEndIndex = startIndex;
 
             //Try to find first not null item
             while ((arrayFeatureFreq[startIndex] == null) &&
@@ -133,7 +133,7 @@ namespace CRFSharp
                 startIndex++;
             }
             arrayFeatureFreq[newEndIndex] = arrayFeatureFreq[startIndex];
-            for (long i = startIndex + 1; i <= endIndex; i++)
+            for (var i = startIndex + 1; i <= endIndex; i++)
             {
                 if (arrayFeatureFreq[i] == null)
                 {
@@ -168,10 +168,10 @@ namespace CRFSharp
         //Generate feature string and its id list
         public void GenerateLexicalIdList(out IList<string> keyList, out IList<int> valList)
         {
-            FixedBigArray<string> fixArrayKey = new FixedBigArray<string>(Size, 0);
+            var fixArrayKey = new FixedBigArray<string>(Size, 0);
             keyList = fixArrayKey;
 
-            FixedBigArray<int> fixArrayValue = new FixedBigArray<int>(Size, 0);
+            var fixArrayValue = new FixedBigArray<int>(Size, 0);
             valList = fixArrayValue;
 
 #if NO_SUPPORT_PARALLEL_LIB
@@ -193,7 +193,7 @@ namespace CRFSharp
         //Generate feature id by NGram rules
         public long RegenerateFeatureId(BTreeDictionary<long, long> old2new, long ysize)
         {
-            AdvUtils.Security.Cryptography.MD5 md5 = new AdvUtils.Security.Cryptography.MD5();
+            var md5 = new AdvUtils.Security.Cryptography.MD5();
             long maxid_ = 0;
 
 #if NO_SUPPORT_PARALLEL_LIB
@@ -203,8 +203,8 @@ namespace CRFSharp
 #endif
             {
                 //Generate new feature id
-                long addValue = (arrayFeatureFreq[i].strFeature[0] == 'U' ? ysize : ysize * ysize);
-                long oldValue = maxid_;
+                var addValue = (arrayFeatureFreq[i].strFeature[0] == 'U' ? ysize : ysize * ysize);
+                var oldValue = maxid_;
                 while (System.Threading.Interlocked.CompareExchange(ref maxid_, oldValue + addValue, oldValue) != oldValue)
                 {
                     oldValue = maxid_;
@@ -230,7 +230,7 @@ namespace CRFSharp
         //Shrink entire list
         public void Shrink(int freq)
         {
-            long newEndIndex = Shrink(0, arrayFeatureFreqSize - 1, freq);
+            var newEndIndex = Shrink(0, arrayFeatureFreqSize - 1, freq);
             arrayFeatureFreqSize = newEndIndex + 1;
         }
 
@@ -249,7 +249,7 @@ namespace CRFSharp
 #if NO_SUPPORT_PARALLEL_LIB
             long newEndIndex = Merge(startIndex, endIndex, freq);
 #else
-            long newEndIndex = ParallelMerge(startIndex, endIndex, freq);
+            var newEndIndex = ParallelMerge(startIndex, endIndex, freq);
 #endif
             sortedEndIndex = newEndIndex;
 
@@ -263,7 +263,7 @@ namespace CRFSharp
         //Get feature string id
         private long GetId(string strFeature)
         {
-            byte[] rawbytes = Encoding.UTF8.GetBytes(strFeature);
+            var rawbytes = Encoding.UTF8.GetBytes(strFeature);
             
             lock (thisLock)
             {
@@ -282,12 +282,12 @@ namespace CRFSharp
             //add item-adding lock
             Interlocked.Increment(ref AddLock);
 
-            FeatureFreq newFFItem = new FeatureFreq();
+            var newFFItem = new FeatureFreq();
             newFFItem.strFeature = strFeature;
             newFFItem.value = 1;
             if (sortedEndIndex > 0)
             {
-                FeatureFreq ff = arrayFeatureFreq.BinarySearch(0, sortedEndIndex, newFFItem);
+                var ff = arrayFeatureFreq.BinarySearch(0, sortedEndIndex, newFFItem);
                 if (ff != null)
                 {
                     Interlocked.Increment(ref ff.value);
@@ -297,7 +297,7 @@ namespace CRFSharp
                 }
             }
 
-            long oldValue = Interlocked.Increment(ref arrayFeatureFreqSize) - 1;
+            var oldValue = Interlocked.Increment(ref arrayFeatureFreqSize) - 1;
             arrayFeatureFreq[oldValue] = newFFItem;
 
             //free item-adding lock
@@ -307,7 +307,7 @@ namespace CRFSharp
             uint memoryLoad = 0;
             if (oldValue % 10000000 == 0)
             {
-                MEMORYSTATUSEX msex = new MEMORYSTATUSEX();
+                var msex = new MEMORYSTATUSEX();
                 GlobalMemoryStatusEx(msex);
                 memoryLoad = msex.dwMemoryLoad;
             }
@@ -317,15 +317,15 @@ namespace CRFSharp
                 if (Interlocked.CompareExchange(ref ShrinkingLock, 1, 0) == 0)
                 {
                     //Double check whether shrink should be started
-                    MEMORYSTATUSEX msex = new MEMORYSTATUSEX();
+                    var msex = new MEMORYSTATUSEX();
                     GlobalMemoryStatusEx(msex);
                     if (msex.dwMemoryLoad >= SHRINK_AVALI_MEM_LOAD)
                     {
                         while (AddLock != 0) { Thread.Sleep(1000); }
 
-                        DateTime startDT = DateTime.Now;
+                        var startDT = DateTime.Now;
                         Console.WriteLine("Begin to shrink [Feature Size: {0}]...", arrayFeatureFreqSize);
-                        long newArrayFeatureFreqSize = Shrink(0, arrayFeatureFreqSize - 1, 0) + 1;
+                        var newArrayFeatureFreqSize = Shrink(0, arrayFeatureFreqSize - 1, 0) + 1;
 
                         GlobalMemoryStatusEx(msex);
                         if (msex.dwMemoryLoad >= SHRINK_AVALI_MEM_LOAD - 1)
@@ -340,7 +340,7 @@ namespace CRFSharp
                         }
 
                         arrayFeatureFreqSize = newArrayFeatureFreqSize;
-                        TimeSpan ts = DateTime.Now - startDT;
+                        var ts = DateTime.Now - startDT;
                         Console.WriteLine("Shrink has been done!");
                         Console.WriteLine("[Feature Size:{0}, TimeSpan:{1}, Next Shrink Rate:{2}%]", arrayFeatureFreqSize, ts, SHRINK_AVALI_MEM_LOAD);
                     }

@@ -28,7 +28,7 @@ namespace CRFSharpWrapper
             {
                 return null;
             }
-            SegDecoderTagger tagger = new SegDecoderTagger(nbest, this_crf_max_word_num);
+            var tagger = new SegDecoderTagger(nbest, this_crf_max_word_num);
             tagger.init_by_model(modelReader);
 
             return tagger;
@@ -40,7 +40,7 @@ namespace CRFSharpWrapper
             List<List<string>> inbuf //feature set for segment
             )
         {
-            int ret = 0;
+            var ret = 0;
             if (inbuf.Count == 0)
             {
                 //Empty input string
@@ -84,7 +84,7 @@ namespace CRFSharpWrapper
             List<List<string>> inbuf //feature set for segment
             )
         {
-            int ret = 0;
+            var ret = 0;
             if (inbuf.Count == 0)
             {
                 //Empty input string

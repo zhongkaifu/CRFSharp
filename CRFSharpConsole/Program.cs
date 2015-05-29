@@ -24,12 +24,13 @@ namespace CRFSharpConsole
                 return;
             }
 
-            bool bEncoder = false;
-            bool bDecoder = false;
-            bool bShrink = false;
+            var bEncoder = false;
+            var bDecoder = false;
+            var bShrink = false;
 
-            foreach (string item in args)
+            for (int index = 0; index < args.Length; index++)
             {
+                var item = args[index];
                 if (item.Length <= 1)
                 {
                     continue;
@@ -40,7 +41,7 @@ namespace CRFSharpConsole
                     continue;
                 }
 
-                string strType = item.Substring(1).ToLower().Trim();
+                var strType = item.Substring(1).ToLower().Trim();
                 if (strType == "encode")
                 {
                     bEncoder = true;
@@ -64,26 +65,26 @@ namespace CRFSharpConsole
 
             //try
             //{
-                if (bEncoder == true)
-                {
-                    EncoderConsole encoderConsole = new EncoderConsole();
-                    encoderConsole.Run(args);
-                }
-                else if (bDecoder == true)
-                {
-                    DecoderConsole decoderConsole = new DecoderConsole();
-                    decoderConsole.Run(args);
-                }
-                else if (bShrink == true)
-                {
-                    ShrinkConsole shrinkConsole = new ShrinkConsole();
-                    shrinkConsole.Run(args);
-                }
-                else
-                {
-                    Usage();
-                }
-           // }
+            if (bEncoder == true)
+            {
+                var encoderConsole = new EncoderConsole();
+                encoderConsole.Run(args);
+            }
+            else if (bDecoder == true)
+            {
+                var decoderConsole = new DecoderConsole();
+                decoderConsole.Run(args);
+            }
+            else if (bShrink == true)
+            {
+                var shrinkConsole = new ShrinkConsole();
+                shrinkConsole.Run(args);
+            }
+            else
+            {
+                Usage();
+            }
+            // }
             //catch (System.AggregateException err)
             //{
             //    Console.WriteLine("Error Message : {0}", err.Message);

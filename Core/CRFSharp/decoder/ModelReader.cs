@@ -23,7 +23,7 @@ namespace CRFSharp
         //返回值<0 为出错，=0为正常
         public bool LoadModel(string filename)
         {
-            StreamReader sr = new StreamReader(filename);
+            var sr = new StreamReader(filename);
             string strLine;
 
 
@@ -80,15 +80,15 @@ namespace CRFSharp
             sr.Close();
 
             //Load all feature set data
-            string filename_feature = filename + ".feature";
+            var filename_feature = filename + ".feature";
             da = new DoubleArrayTrieSearch();
             da.Load(filename_feature);
 
 
             //Load all features alpha data
-            string filename_alpha = filename + ".alpha";
-            StreamReader sr_alpha = new StreamReader(filename_alpha);
-            BinaryReader br_alpha = new BinaryReader(sr_alpha.BaseStream);
+            var filename_alpha = filename + ".alpha";
+            var sr_alpha = new StreamReader(filename_alpha);
+            var br_alpha = new BinaryReader(sr_alpha.BaseStream);
 
             if (version == Utils.MODEL_TYPE_NORM)
             {
@@ -106,7 +106,7 @@ namespace CRFSharp
                 alpha_two_tuples = new BTreeDictionary<long, double>();
                 for (long i = 0; i < maxid_; i++)
                 {
-                    long key = br_alpha.ReadInt64();
+                    var key = br_alpha.ReadInt64();
                     double weight = br_alpha.ReadSingle();
                     alpha_two_tuples.Add(key, weight);
                 }
