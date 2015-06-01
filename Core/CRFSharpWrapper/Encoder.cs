@@ -171,7 +171,7 @@ namespace CRFSharpWrapper
                 var threadList = new List<Thread>();
                 for (var i = 0; i < args.threads_num; i++)
                 {
-                    var thread = new Thread(new ThreadStart(processList[i].Run));
+                    var thread = new Thread(processList[i].Run);
                     thread.Start();
                     threadList.Add(thread);
                 }

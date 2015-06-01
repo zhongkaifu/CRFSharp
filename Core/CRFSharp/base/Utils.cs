@@ -159,17 +159,28 @@ namespace CRFSharp
 
         public static double logsumexp(double x, double y, bool flg)
         {
-            if (flg) return y;  // init mode
-            var vmin = Math.Min(x, y);
-            var vmax = Math.Max(x, y);
+            if (flg)
+            {
+                return y;  // init mode
+            }
+            double vmin;
+            double vmax;
+            if (x > y)
+            {
+                vmin = y;
+                vmax = x;
+            }
+            else
+            {
+                vmin = x;
+                vmax = y;
+            }
+
             if (vmax > vmin + MINUS_LOG_EPSILON)
             {
                 return vmax;
             }
-            else
-            {
-                return vmax + Math.Log(Math.Exp(vmin - vmax) + 1.0);
-            }
+            return vmax + Math.Log(Math.Exp(vmin - vmax) + 1.0);
         }
     }
 }

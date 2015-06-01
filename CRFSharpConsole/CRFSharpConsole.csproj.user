@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <StartArguments>-encode -modelfile model.dat -trainfile input.txt -template template.txt -thread 2</StartArguments>
-    <StartWorkingDirectory>C:\Users\Dmitry\OneDrive\Ru\</StartWorkingDirectory>
+    <StartArguments>-encode -modelfile model.dat -trainfile input.txt -template template.txt -thread 4</StartArguments>
+    <StartWorkingDirectory>C:\Users\Admin\Source\Repos\CRFSharp2\CRFSharpConsole\bin\Release\</StartWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup>
     <PublishUrlHistory>publish\</PublishUrlHistory>
