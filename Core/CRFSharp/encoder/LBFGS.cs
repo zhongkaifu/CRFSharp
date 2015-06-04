@@ -79,7 +79,7 @@ namespace CRFSharp
 
         void pseudo_gradient(double[] x, double C)
         {
-            long size = expected.LongLength - 1;
+            var size = expected.LongLength - 1;
 #if NO_SUPPORT_PARALLEL_LIB
             for (long i = 1; i < size + 1;i++)
 #else
@@ -121,7 +121,7 @@ namespace CRFSharp
         public int optimize(double[] x, double C, bool orthant)
         {
             const long msize = 5;
-            long size = x.LongLength - 1;
+            var size = x.LongLength - 1;
             if (w == null || w.LongLength == 0)
             {
                 iflag_ = 0;
@@ -155,12 +155,12 @@ namespace CRFSharp
 
         void lbfgs_optimize(long msize, double[] x, bool orthant, double C)
         {
-            long size = x.LongLength - 1;
-            double yy = 0.0;
-            double ys = 0.0;
+            var size = x.LongLength - 1;
+            var yy = 0.0;
+            var ys = 0.0;
             long bound = 0;
             long cp = 0;
-            bool bExit = false;
+            var bExit = false;
 
             // initialization
             if (iflag_ == 0)
@@ -241,7 +241,7 @@ namespace CRFSharp
                 ys = ddot_(size, w, iypt + npt + 1, w, ispt + npt + 1);
                 yy = ddot_(size, w, iypt + npt + 1, w, iypt + npt + 1);
 
-                double r_ys_yy = ys / yy;
+                var r_ys_yy = ys / yy;
 #if NO_SUPPORT_PARALLEL_LIB
                 for (long i = 1;i < size + 1;i++)
 #else
@@ -266,15 +266,15 @@ namespace CRFSharp
                 //回退次数
                 bound = Math.Min(iter - 1, msize);
                 cp = point;
-                for (int i = 1; i <= bound; ++i)
+                for (var i = 1; i <= bound; ++i)
                 {
                     --cp;
                     if (cp == -1) cp = msize - 1;
-                    double sq = ddot_(size, w, ispt + cp * size + 1, w, 1);
-                    long inmc = size + msize + cp + 1;
-                    long iycn = iypt + cp * size;
+                    var sq = ddot_(size, w, ispt + cp * size + 1, w, 1);
+                    var inmc = size + msize + cp + 1;
+                    var iycn = iypt + cp * size;
                     w[inmc] = (w[size + cp + 1] * sq);
-                    double d = -w[inmc];
+                    var d = -w[inmc];
 
 #if NO_SUPPORT_PARALLEL_LIB
                     for (long j = 1;j < size + 1;j++)
@@ -303,13 +303,13 @@ namespace CRFSharp
                 );
 #endif
 
-                for (int i = 1; i <= bound; ++i)
+                for (var i = 1; i <= bound; ++i)
                 {
-                    double yr = ddot_(size, w, iypt + cp * size + 1, w, 1);
-                    double beta = w[size + cp + 1] * yr;
-                    long inmc = size + msize + cp + 1;
+                    var yr = ddot_(size, w, iypt + cp * size + 1, w, 1);
+                    var beta = w[size + cp + 1] * yr;
+                    var inmc = size + msize + cp + 1;
                     beta = w[inmc] - beta;
-                    long iscn = ispt + cp * size;
+                    var iscn = ispt + cp * size;
 
 #if NO_SUPPORT_PARALLEL_LIB
                     for (long j = 1;j < size + 1;j++)
@@ -349,7 +349,7 @@ namespace CRFSharp
 
 
                 // STORE THE NEW SEARCH DIRECTION
-                long offset = ispt + point * size;
+                var offset = ispt + point * size;
 
 #if NO_SUPPORT_PARALLEL_LIB
                 for (long i = 1;i < size + 1;i++)
@@ -373,8 +373,8 @@ namespace CRFSharp
 
         private bool LineSearchAndUpdateStepGradient(long msize, double[] x, bool orthant)
         {
-            long size = x.LongLength - 1;
-            bool bExit = false;
+            var size = x.LongLength - 1;
+            var bExit = false;
             mcsrch_.mcsrch(x, obj, v, w, ispt + point * size,
                             ref stp, ref info, ref nfev, diag);
             if (info == -1)
@@ -430,8 +430,8 @@ namespace CRFSharp
                     point = 0;
                 }
 
-                double gnorm = Math.Sqrt(ddot_(size, v, 1, v, 1));
-                double xnorm = Math.Max(1.0, Math.Sqrt(ddot_(size, x, 1, x, 1)));
+                var gnorm = Math.Sqrt(ddot_(size, v, 1, v, 1));
+                var xnorm = Math.Max(1.0, Math.Sqrt(ddot_(size, x, 1, x, 1)));
                 if (gnorm / xnorm <= Utils.eps)
                 {
                     iflag_ = 0;  // OK terminated

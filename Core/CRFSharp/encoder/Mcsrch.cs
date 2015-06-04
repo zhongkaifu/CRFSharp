@@ -64,7 +64,7 @@ namespace CRFSharp
             double stpmin, double stpmax,
             ref int info)
         {
-            bool bound = true;
+            var bound = true;
             double p, q, d3, r, stpq, stpc, stpf;
             double gamma;
             double s;
@@ -78,7 +78,7 @@ namespace CRFSharp
                 return;
             }
 
-            double sgnd = dp * (dx / Math.Abs(dx));
+            var sgnd = dp * (dx / Math.Abs(dx));
             if (fp > fx)
             {
                 info = 1;
@@ -326,15 +326,15 @@ namespace CRFSharp
         public void mcsrch(double[] x, double f, double[] g, double[] s, long s_idx,
             ref double stp, ref long info, ref long nfev, double[] wa)
         {
-            long size = x.LongLength - 1;
+            var size = x.LongLength - 1;
             /* Parameter adjustments */
             if (info == -1)
             {
                 info = 0;
                 nfev++;
 
-                double dg = ddot_(size, g, 1, s, s_idx + 1);
-                double ftest1 = finit + stp * dgtest;
+                var dg = ddot_(size, g, 1, s, s_idx + 1);
+                var ftest1 = finit + stp * dgtest;
 
                 if (brackt && ((stp <= stmin || stp >= stmax) || infoc == 0))
                 {
@@ -380,12 +380,12 @@ namespace CRFSharp
 
                 if (stage1 && f <= fx && f > ftest1)
                 {
-                    double fm = f - stp * dgtest;
-                    double fxm = fx - stx * dgtest;
-                    double fym = fy - sty * dgtest;
-                    double dgm = dg - dgtest;
-                    double dgxm = dgx - dgtest;
-                    double dgym = dgy - dgtest;
+                    var fm = f - stp * dgtest;
+                    var fxm = fx - stx * dgtest;
+                    var fym = fy - sty * dgtest;
+                    var dgm = dg - dgtest;
+                    var dgxm = dgx - dgtest;
+                    var dgym = dgy - dgtest;
                     mcstep(ref stx, ref fxm, ref dgxm, ref sty, ref fym, ref dgym, ref stp, fm, dgm, ref brackt,
                            stmin, stmax, ref infoc);
                     fx = fxm + stx * dgtest;
@@ -401,7 +401,7 @@ namespace CRFSharp
 
                 if (brackt)
                 {
-                    double d1 = 0.0;
+                    var d1 = 0.0;
                     d1 = sty - stx;
                     if (Math.Abs(d1) >= p66 * width1)
                     {
@@ -476,7 +476,7 @@ namespace CRFSharp
                 stp = stx;
             }
 
-            double stp_t = stp;
+            var stp_t = stp;
 
 #if NO_SUPPORT_PARALLEL_LIB
             for (long i = 1;i < size + 1;i++)

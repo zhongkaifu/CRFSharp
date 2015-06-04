@@ -56,7 +56,7 @@ namespace CRFSharp
             H.elem_ptr_list = new List<QueueElement>(max_size + 1);
             H.elem_list = new List<QueueElement>(max_size + 1);
 
-            for (int z = 0; z < max_size; z++)
+            for (var z = 0; z < max_size; z++)
             {
                 H.elem_list.Add(new QueueElement());
                 H.elem_ptr_list.Add(null);
@@ -85,7 +85,7 @@ namespace CRFSharp
             {
                 return Utils.ERROR_HEAP_SIZE_TOO_BIG;
             }
-            int i = ++H.size;
+            var i = ++H.size;
             while (i != 1 && H.elem_ptr_list[i / 2].fx > qe.fx)
             {
                 H.elem_ptr_list[i] = H.elem_ptr_list[i / 2];  //此时i还没有进行i/2操作		
@@ -97,8 +97,8 @@ namespace CRFSharp
 
         public static QueueElement heap_delete_min(Heap H)
         {
-            QueueElement min_elem = H.elem_ptr_list[1];  //堆是从第1号元素开始的
-            QueueElement last_elem = H.elem_ptr_list[H.size--];
+            var min_elem = H.elem_ptr_list[1];  //堆是从第1号元素开始的
+            var last_elem = H.elem_ptr_list[H.size--];
             int i = 1, ci = 2;
             while (ci <= H.size)
             {
@@ -159,17 +159,28 @@ namespace CRFSharp
 
         public static double logsumexp(double x, double y, bool flg)
         {
-            if (flg) return y;  // init mode
-            double vmin = Math.Min(x, y);
-            double vmax = Math.Max(x, y);
+            if (flg)
+            {
+                return y;  // init mode
+            }
+            double vmin;
+            double vmax;
+            if (x > y)
+            {
+                vmin = y;
+                vmax = x;
+            }
+            else
+            {
+                vmin = x;
+                vmax = y;
+            }
+
             if (vmax > vmin + MINUS_LOG_EPSILON)
             {
                 return vmax;
             }
-            else
-            {
-                return vmax + Math.Log(Math.Exp(vmin - vmax) + 1.0);
-            }
+            return vmax + Math.Log(Math.Exp(vmin - vmax) + 1.0);
         }
     }
 }

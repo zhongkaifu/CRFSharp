@@ -52,10 +52,10 @@ namespace CRFSharp
         //Regenerate feature id and shrink features with lower frequency
         public void Shrink(EncoderTagger[] xList, int freq)
         {
-            BTreeDictionary<long, long> old2new = new BTreeDictionary<long, long>();
+            var old2new = new BTreeDictionary<long, long>();
             featureLexicalDict.Shrink(freq);
             maxid_ = featureLexicalDict.RegenerateFeatureId(old2new, y_.Count);
-            int feature_count = xList.Length;
+            var feature_count = xList.Length;
 
             //Update feature ids
 #if NO_SUPPORT_PARALLEL_LIB
@@ -64,12 +64,13 @@ namespace CRFSharp
             Parallel.For(0, feature_count, parallelOption, i =>
 #endif
             {
-                for (int j = 0; j < xList[i].feature_cache_.Count; j++)
+                for (var j = 0; j < xList[i].feature_cache_.Count; j++)
                 {
-                    List<long> newfs = new List<long>();
+                    var newfs = new List<long>();
                     long rstValue = 0;
-                    foreach (long v in xList[i].feature_cache_[j])
+                    for (int index = 0; index < xList[i].feature_cache_[j].Length; index++)
                     {
+                        var v = xList[i].feature_cache_[j][index];
                         if (old2new.TryGetValue(v, out rstValue) == true)
                         {
                             newfs.Add(rstValue);
@@ -80,7 +81,7 @@ namespace CRFSharp
             }
 #if NO_SUPPORT_PARALLEL_LIB
 #else
-            );
+);
 #endif
 
             Console.WriteLine("Feature size in total : {0}", maxid_);
@@ -89,8 +90,8 @@ namespace CRFSharp
         //Load all records and generate features
         public EncoderTagger[] ReadAllRecords()
         {
-            EncoderTagger[] arrayEncoderTagger = new EncoderTagger[trainCorpusList.Count];
-            int arrayEncoderTaggerSize = 0;
+            var arrayEncoderTagger = new EncoderTagger[trainCorpusList.Count];
+            var arrayEncoderTaggerSize = 0;
 
             //Generate each record features
 #if NO_SUPPORT_PARALLEL_LIB
@@ -99,14 +100,14 @@ namespace CRFSharp
             Parallel.For(0, trainCorpusList.Count, parallelOption, i =>
 #endif
             {
-                EncoderTagger _x = new EncoderTagger(this);
+                var _x = new EncoderTagger(this);
                 if (_x.GenerateFeature(trainCorpusList[i]) == false)
                 {
                     Console.WriteLine("Load a training sentence failed, skip it.");
                 }
                 else
                 {
-                    int oldValue = Interlocked.Increment(ref arrayEncoderTaggerSize) - 1;
+                    var oldValue = Interlocked.Increment(ref arrayEncoderTaggerSize) - 1;
                     arrayEncoderTagger[oldValue] = _x;
 
                     if (oldValue % 10000 == 0)
@@ -118,7 +119,7 @@ namespace CRFSharp
             }
 #if NO_SUPPORT_PARALLEL_LIB
 #else
-            );
+);
 #endif
 
             trainCorpusList.Clear();
@@ -146,10 +147,10 @@ namespace CRFSharp
             if (debugLevel > 0)
             {
                 Console.Write("Debug: Writing raw feature set into file...");
-                string filename_featureset_raw_format = filename + ".feature.raw_text";
-                StreamWriter sw = new StreamWriter(filename_featureset_raw_format);
+                var filename_featureset_raw_format = filename + ".feature.raw_text";
+                var sw = new StreamWriter(filename_featureset_raw_format);
                 // save feature and its id into lists in raw format
-                for (int i = 0; i < keyList.Count; i++)
+                for (var i = 0; i < keyList.Count; i++)
                 {
                     sw.WriteLine("{0}\t{1}", keyList[i], valList[i]);
                 }
@@ -158,8 +159,8 @@ namespace CRFSharp
             }
 
             //Build feature index
-            string filename_featureset = filename + ".feature";
-            DoubleArrayTrieBuilder da = new DoubleArrayTrieBuilder(thread_num_);
+            var filename_featureset = filename + ".feature";
+            var da = new DoubleArrayTrieBuilder(thread_num_);
             if (da.build(keyList, valList, max_slot_usage_rate_threshold) == false)
             {
                 Console.WriteLine("Build lexical dictionary failed.");
@@ -188,20 +189,20 @@ namespace CRFSharp
                 //Create weight matrix
                 alpha_ = new double[feature_size() + 1];
 
-                ModelReader modelReader = new ModelReader();
+                var modelReader = new ModelReader();
                 modelReader.LoadModel(strRetrainModelFileName);
 
                 if (modelReader.y_.Count == y_.Count)
                 {
-                    for (int i = 0; i < keyList.Count; i++)
+                    for (var i = 0; i < keyList.Count; i++)
                     {
-                        int index = modelReader.get_id(keyList[i]);
+                        var index = modelReader.get_id(keyList[i]);
                         if (index < 0)
                         {
                             continue;
                         }
-                        int size = (keyList[i][0] == 'U' ? y_.Count : y_.Count * y_.Count);
-                        for (int j = 0; j < size; j++)
+                        var size = (keyList[i][0] == 'U' ? y_.Count : y_.Count * y_.Count);
+                        for (var j = 0; j < size; j++)
                         {
                             alpha_[valList[i] + j + 1] = modelReader.GetAlpha(index + j);
                         }
@@ -227,7 +228,7 @@ namespace CRFSharp
         //Save model meta data into file
         public bool SaveModelMetaData(string filename)
         {
-            StreamWriter tofs = new StreamWriter(filename);
+            var tofs = new StreamWriter(filename);
 
             // header
             tofs.WriteLine("version: " + Utils.MODEL_TYPE_NORM);
@@ -238,18 +239,18 @@ namespace CRFSharp
             tofs.WriteLine();
 
             // y
-            for (int i = 0; i < y_.Count; ++i)
+            for (var i = 0; i < y_.Count; ++i)
             {
                 tofs.WriteLine(y_[i]);
             }
             tofs.WriteLine();
 
             // template
-            for (int i = 0; i < unigram_templs_.Count; ++i)
+            for (var i = 0; i < unigram_templs_.Count; ++i)
             {
                 tofs.WriteLine(unigram_templs_[i]);
             }
-            for (int i = 0; i < bigram_templs_.Count; ++i)
+            for (var i = 0; i < bigram_templs_.Count; ++i)
             {
                 tofs.WriteLine(bigram_templs_[i]);
             }
@@ -262,27 +263,27 @@ namespace CRFSharp
 
         public bool SaveFeatureWeight(string filename)
         {
-            string filename_alpha = filename + ".alpha";
-            StreamWriter tofs = new StreamWriter(filename_alpha, false);
-            BinaryWriter bw = new BinaryWriter(tofs.BaseStream);
+            var filename_alpha = filename + ".alpha";
+            var tofs = new StreamWriter(filename_alpha, false);
+            var bw = new BinaryWriter(tofs.BaseStream);
 
             for (long i = 1; i <= maxid_; ++i)
             {
                 bw.Write((float)alpha_[i]);
             }
-  
+
             bw.Close();
             return true;
         }
 
         bool OpenTemplateFile(string filename)
         {
-            StreamReader ifs = new StreamReader(filename);
+            var ifs = new StreamReader(filename);
             unigram_templs_ = new List<string>();
             bigram_templs_ = new List<string>();
             while (ifs.EndOfStream == false)
             {
-                string line = ifs.ReadLine();
+                var line = ifs.ReadLine();
                 if (line.Length == 0 || line[0] == '#')
                 {
                     continue;
@@ -306,16 +307,16 @@ namespace CRFSharp
 
         bool OpenTrainCorpusFile(string strTrainingCorpusFileName)
         {
-            StreamReader ifs = new StreamReader(strTrainingCorpusFileName);
+            var ifs = new StreamReader(strTrainingCorpusFileName);
             y_ = new List<string>();
             trainCorpusList = new List<List<List<string>>>();
-            HashSet<string> hashCand = new HashSet<string>();
-            List<List<string>> recordList = new List<List<string>>();
+            var hashCand = new HashSet<string>();
+            var recordList = new List<List<string>>();
 
-            int last_xsize = -1;
+            var last_xsize = -1;
             while (ifs.EndOfStream == false)
             {
-                string line = ifs.ReadLine();
+                var line = ifs.ReadLine();
                 if (line.Length == 0 || line[0] == ' ' || line[0] == '\t')
                 {
                     //Current record is finished, save it into the list
@@ -327,8 +328,8 @@ namespace CRFSharp
                     continue;
                 }
 
-                string[] items = line.Split('\t');
-                int size = items.Length;
+                var items = line.Split('\t');
+                var size = items.Length;
                 if (last_xsize >= 0 && last_xsize != size)
                 {
                     return false;
@@ -353,36 +354,38 @@ namespace CRFSharp
         //If feature string is not existed in the set, generate a new id and return it
         public bool BuildFeatures(EncoderTagger tagger)
         {
-            List<long> feature = new List<long>();
+            var feature = new List<long>();
 
             //tagger.feature_id_ = tagger.feature_cache_.Count;
-            for (int cur = 0; cur < tagger.word_num; ++cur)
+            for (var cur = 0; cur < tagger.word_num; ++cur)
             {
-                foreach (string it in unigram_templs_)
+                for (int index = 0; index < unigram_templs_.Count; index++)
                 {
-                    string strFeature = apply_rule(it, cur, tagger);
+                    var it = unigram_templs_[index];
+                    var strFeature = apply_rule(it, cur, tagger);
                     if (strFeature == "")
                     {
                         Console.WriteLine(" format error: " + it);
                     }
 
-                    long id = featureLexicalDict.GetOrAddId(strFeature);
+                    var id = featureLexicalDict.GetOrAddId(strFeature);
                     feature.Add(id);
                 }
                 tagger.feature_cache_.Add(feature.ToArray());
                 feature.Clear();
             }
 
-            for (int cur = 1; cur < tagger.word_num; ++cur)
+            for (var cur = 1; cur < tagger.word_num; ++cur)
             {
-                foreach (string it in bigram_templs_)
+                for (int index = 0; index < bigram_templs_.Count; index++)
                 {
-                    string strFeature = apply_rule(it, cur, tagger);
+                    var it = bigram_templs_[index];
+                    var strFeature = apply_rule(it, cur, tagger);
                     if (strFeature == "")
                     {
                         Console.WriteLine(" format error: " + it);
                     }
-                    long id = featureLexicalDict.GetOrAddId(strFeature);
+                    var id = featureLexicalDict.GetOrAddId(strFeature);
                     feature.Add(id);
                 }
 

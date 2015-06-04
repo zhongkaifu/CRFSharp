@@ -47,7 +47,7 @@ namespace corpus2tag
                 File.Exists(Properties.Settings.Default.FeatureGeneratorDLL) == true)
             {
                 Console.WriteLine("Loading external DLL: {0}", Properties.Settings.Default.FeatureGeneratorDLL);
-                Assembly ass = Assembly.LoadFrom(Properties.Settings.Default.FeatureGeneratorDLL);
+                var ass = Assembly.LoadFrom(Properties.Settings.Default.FeatureGeneratorDLL);
                 if (ass == null)
                 {
                     Console.WriteLine("Load {0} failed.", Properties.Settings.Default.FeatureGeneratorDLL);
@@ -73,20 +73,20 @@ namespace corpus2tag
                 return;
             }
 
-            Dictionary<string, int> mappedTag2num = new Dictionary<string, int>();
-            Dictionary<string, int> orignalTag2num = new Dictionary<string, int>();
+            var mappedTag2num = new Dictionary<string, int>();
+            var orignalTag2num = new Dictionary<string, int>();
 
-            Dictionary<string, string> t2t = new Dictionary<string, string>();
-            StreamReader sr = new StreamReader(args[0]);
-            StreamWriter sw = new StreamWriter(args[0] + ".tag");
-            StreamWriter sw_f = new StreamWriter(args[0] + ".filtered");
-            StreamReader swmap = new StreamReader(args[1]);
+            var t2t = new Dictionary<string, string>();
+            var sr = new StreamReader(args[0]);
+            var sw = new StreamWriter(args[0] + ".tag");
+            var sw_f = new StreamWriter(args[0] + ".filtered");
+            var swmap = new StreamReader(args[1]);
 
             //Load tag mapping file
             while (swmap.EndOfStream == false)
             {
-                string strLine = swmap.ReadLine().Trim();
-                string [] items = strLine.Split(new char[]{'\t'});
+                var strLine = swmap.ReadLine().Trim();
+                var items = strLine.Split(new char[]{'\t'});
 
                 if (items.Length != 2)
                 {
@@ -106,27 +106,28 @@ namespace corpus2tag
             swmap.Close();
 
             //Read each line and convert it into CRFSharp training format
-            int LineNo = 0;
+            var LineNo = 0;
             while (sr.EndOfStream == false)
             {
-                string strLine = sr.ReadLine().Trim();
+                var strLine = sr.ReadLine().Trim();
                 LineNo++;
 
                 try
                 {
-                    string strFilterLine = "";
+                    var strFilterLine = "";
                     if (strLine.Length == 0)
                     {
                         continue;
                     }
 
                     //Split the record into token list
-                    string[] items = strLine.Split();
-                    List<List<string>> tagListList = new List<List<string>>();
+                    var items = strLine.Split();
+                    var tagListList = new List<List<string>>();
 
-                    foreach (string item in items)
+                    for (var index = 0; index < items.Length; index++)
                     {
-                        //Check whether the data format is correct
+                        var item = items[index];
+//Check whether the data format is correct
                         if (item[item.Length - 1] != ']')
                         {
                             Console.WriteLine("{0} is invalidated format at Line #{1}", strLine, LineNo);
@@ -134,7 +135,7 @@ namespace corpus2tag
                         }
 
                         string term = "", tag = "";
-                        int pos = item.LastIndexOf('[');
+                        var pos = item.LastIndexOf('[');
                         if (pos >= 0)
                         {
                             term = item.Substring(0, pos).ToLower();
@@ -180,7 +181,7 @@ namespace corpus2tag
                         {
                             tag = "";
                         }
-                        for (int i = 0; i < term.Length; i++)
+                        for (var i = 0; i < term.Length; i++)
                         {
                             string tag2;
 
@@ -224,8 +225,8 @@ namespace corpus2tag
                     sw_f.WriteLine(strFilterLine);
 
 
-                    StringBuilder sb = new StringBuilder();
-                    for (int i = 0; i < tagListList.Count; i++)
+                    var sb = new StringBuilder();
+                    for (var i = 0; i < tagListList.Count; i++)
                     {
                         sb.Append(tagListList[i][0]);
                     }
@@ -237,15 +238,15 @@ namespace corpus2tag
                         Console.WriteLine("Generate Feature invalidated. Error: {0}", strLine);
                     }
 
-                    for (int i = 0; i < tagListList.Count; i++)
+                    for (var i = 0; i < tagListList.Count; i++)
                     {
-                        string strRstLine = tagListList[i][0];
+                        var strRstLine = tagListList[i][0];
                         if (tagListList[i][0] != featureListList[i][0])
                         {
                             Console.WriteLine("Character feature is not equal.");
                         }
 
-                        for (int j = 1; j < featureListList[i].Count; j++)
+                        for (var j = 1; j < featureListList[i].Count; j++)
                         {
                             strRstLine = strRstLine + "\t" + featureListList[i][j];
                         }
@@ -267,13 +268,13 @@ namespace corpus2tag
             }
 
             Console.WriteLine("Orignal Tags Statistics:");
-            foreach (KeyValuePair<string, int> pair in orignalTag2num)
+            foreach (var pair in orignalTag2num)
             {
                 Console.WriteLine("{0}\t{1}", pair.Key, pair.Value);
             }
 
             Console.WriteLine("Mapped Tag Statistics:");
-            foreach (KeyValuePair<string, int> pair in mappedTag2num)
+            foreach (var pair in mappedTag2num)
             {
                 Console.WriteLine("{0}\t{1}", pair.Key, pair.Value);
             }

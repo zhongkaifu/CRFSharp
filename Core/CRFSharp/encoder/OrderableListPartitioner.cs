@@ -40,7 +40,7 @@ namespace CRFSharp
             var partitions =
                 new IEnumerator<KeyValuePair<long, TSource>>[partitionCount];
 
-            for (int i = 0; i < partitionCount; i++)
+            for (var i = 0; i < partitionCount; i++)
             {
                 partitions[i] = dynamicPartitions.GetEnumerator();
             }
@@ -70,7 +70,7 @@ namespace CRFSharp
                 {
                     // Each task gets the next item in the list. The index is 
                     // incremented in a thread-safe manner to avoid races.
-                    int elemIndex = Interlocked.Increment(ref m_pos) - 1;
+                    var elemIndex = Interlocked.Increment(ref m_pos) - 1;
 
                     if (elemIndex >= m_input.Count)
                     {

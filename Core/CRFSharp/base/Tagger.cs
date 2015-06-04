@@ -19,21 +19,22 @@ namespace CRFSharp
         //Calculate the cost of each path. It's used for finding the best or N-best result
         public int viterbi()
         {
-            double bestc = double.MinValue;
+            var bestc = double.MinValue;
             Node bestNode = null;
 
-            for (int i = 0; i < word_num; ++i)
+            for (var i = 0; i < word_num; ++i)
             {
-                for (int j = 0; j < ysize_; ++j)
+                for (var j = 0; j < ysize_; ++j)
                 {
                     bestc = double.MinValue;
                     bestNode = null;
 
-                    Node node_i_j = node_[i, j];
+                    var node_i_j = node_[i, j];
 
-                    foreach (CRFSharp.Path p in node_i_j.lpathList)
+                    for (int index = 0; index < node_i_j.lpathList.Count; index++)
                     {
-                        double cost = p.lnode.bestCost + p.cost + node_i_j.cost;
+                        var p = node_i_j.lpathList[index];
+                        var cost = p.lnode.bestCost + p.cost + node_i_j.cost;
                         if (cost > bestc)
                         {
                             bestc = cost;
@@ -49,7 +50,7 @@ namespace CRFSharp
             bestc = double.MinValue;
             bestNode = null;
 
-            short s = (short)(word_num - 1);
+            var s = (short)(word_num - 1);
             for (short j = 0; j < ysize_; ++j)
             {
                 if (bestc < node_[s, j].bestCost)
@@ -59,7 +60,7 @@ namespace CRFSharp
                 }
             }
 
-            Node n = bestNode;
+            var n = bestNode;
             while (n != null)
             {
                 result_[n.x] = n.y;
@@ -73,12 +74,13 @@ namespace CRFSharp
 
         private void calcAlpha(int m, int n)
         {
-            Node nd = node_[m, n];
+            var nd = node_[m, n];
             nd.alpha = 0.0;
 
-            int i = 0;
-            foreach (CRFSharp.Path p in nd.lpathList)
+            var i = 0;
+            for (int index = 0; index < nd.lpathList.Count; index++)
             {
+                var p = nd.lpathList[index];
                 nd.alpha = Utils.logsumexp(nd.alpha, p.cost + p.lnode.alpha, (i == 0));
                 i++;
             }
@@ -87,13 +89,14 @@ namespace CRFSharp
 
         private void calcBeta(int m, int n)
         {
-            Node nd = node_[m, n];
+            var nd = node_[m, n];
             nd.beta = 0.0f;
             if (m + 1 < word_num)
             {
-                int i = 0;
-                foreach (CRFSharp.Path p in nd.rpathList)
+                var i = 0;
+                for (int index = 0; index < nd.rpathList.Count; index++)
                 {
+                    var p = nd.rpathList[index];
                     nd.beta = Utils.logsumexp(nd.beta, p.cost + p.rnode.beta, (i == 0));
                     i++;
                 }
@@ -105,7 +108,7 @@ namespace CRFSharp
         {
             for (int i = 0, k = word_num - 1; i < word_num; ++i, --k)
             {
-                for (int j = 0; j < ysize_; ++j)
+                for (var j = 0; j < ysize_; ++j)
                 {
                     calcAlpha(i, j);
                     calcBeta(k, j);
@@ -113,7 +116,7 @@ namespace CRFSharp
             }
 
             Z_ = 0.0;
-            for (int j = 0; j < ysize_; ++j)
+            for (var j = 0; j < ysize_; ++j)
             {
                 Z_ = Utils.logsumexp(Z_, node_[0, j].beta, j == 0);
             }
@@ -123,7 +126,7 @@ namespace CRFSharp
         //Assign feature ids to node and path
         public int RebuildFeatures()
         {
-            int fid = 0;
+            var fid = 0;
             for (short cur = 0; cur < word_num; cur++)
             {
                 for (short i = 0; i < ysize_; i++)
@@ -133,12 +136,13 @@ namespace CRFSharp
                 fid++;
             }
 
-            for (int cur = 1; cur < word_num; cur++)
+            for (var cur = 1; cur < word_num; cur++)
             {
-                for (int j = 0; j < ysize_; ++j)
+                for (var j = 0; j < ysize_; ++j)
                 {
-                    foreach (CRFSharp.Path path in node_[cur - 1, j].rpathList)
+                    for (int index = 0; index < node_[cur - 1, j].rpathList.Count; index++)
                     {
+                        var path = node_[cur - 1, j].rpathList[index];
                         path.fid = fid;
                     }
                 }

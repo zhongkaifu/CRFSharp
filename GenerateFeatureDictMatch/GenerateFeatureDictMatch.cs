@@ -21,13 +21,13 @@ namespace GenerateFeatureDictMatch
 
         private Dictionary<string, string> LoadConfigFile(string strFileName)
         {
-            Dictionary<string, string> dict = new Dictionary<string,string>();
+            var dict = new Dictionary<string,string>();
 
-            StreamReader sr = new StreamReader(strFileName);
+            var sr = new StreamReader(strFileName);
             while (sr.EndOfStream == false)
             {
-                string strLine = sr.ReadLine();
-                string [] items = strLine.Split('=');
+                var strLine = sr.ReadLine();
+                var items = strLine.Split('=');
 
                 items[0] = items[0].ToLower().Trim();
                 items[1] = items[1].ToLower().Trim();
@@ -63,8 +63,8 @@ namespace GenerateFeatureDictMatch
                 return false;
             }
 
-            string strDictMatchFileName = configDict[KEY_LEXICAL_DICT_FILE_NAME.ToLower()];
-            bool bBinaryDict = bool.Parse(configDict[KEY_BINARY_DICT_TYPE.ToLower()]);
+            var strDictMatchFileName = configDict[KEY_LEXICAL_DICT_FILE_NAME.ToLower()];
+            var bBinaryDict = bool.Parse(configDict[KEY_BINARY_DICT_TYPE.ToLower()]);
 
             if (strDictMatchFileName.Length == 0)
             {
@@ -84,7 +84,7 @@ namespace GenerateFeatureDictMatch
 
         public List<List<string>> GenerateFeature(string strText)
         {
-            List<List<string>> rstListList = new List<List<string>>();
+            var rstListList = new List<List<string>>();
             if (dictmatch == null)
             {
                 return rstListList;
@@ -97,18 +97,18 @@ namespace GenerateFeatureDictMatch
             string [] astrDictMatch;
             astrDictMatch = new string[strText.Length];
 
-            for (int i = 0; i < dm_r.Count; i++)
+            for (var i = 0; i < dm_r.Count; i++)
             {
-                int offset = dm_offsetList[i];
-                int len = (int)dm_r[i].len;
+                var offset = dm_offsetList[i];
+                var len = (int)dm_r[i].len;
 
-                for (int j = offset; j < offset + len; j++)
+                for (var j = offset; j < offset + len; j++)
                 {
                     astrDictMatch[j] = dm_r[i].strProp;
                 }
             }
 
-            for (int i = 0;i < strText.Length;i++)
+            for (var i = 0;i < strText.Length;i++)
             {
                 rstListList.Add(new List<string>());
                 rstListList[i].Add(strText[i].ToString());

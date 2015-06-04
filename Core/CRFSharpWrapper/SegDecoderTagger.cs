@@ -24,20 +24,20 @@ namespace CRFSharpWrapper
             term_buf.Clear();
 
             //build raw result at first
-            int iRet = termbuf_build(term_buf);
+            var iRet = termbuf_build(term_buf);
             if (iRet != Utils.ERROR_SUCCESS)
             {
                 return iRet;
             }
 
             //Then build token result
-            int term_len = 0;
-            double weight = 0.0;
-            int num = 0;
-            for (int i = 0; i < x_.Count; i++)
+            var term_len = 0;
+            var weight = 0.0;
+            var num = 0;
+            for (var i = 0; i < x_.Count; i++)
             {
                 //Adding the length of current token
-                string strTag = term_buf.result_[i];
+                var strTag = term_buf.result_[i];
                 term_len += x_[i][0].Length;
                 weight += term_buf.weight_[i];
                 num++;
@@ -47,11 +47,11 @@ namespace CRFSharpWrapper
                     strTag.StartsWith("M_") == false) ||
                     i == x_.Count - 1)
                 {
-                    SegToken tkn = new SegToken();
+                    var tkn = new SegToken();
                     tkn.length = term_len;
                     tkn.offset = term_buf.termTotalLength;
 
-                    int spos = strTag.IndexOf('_');
+                    var spos = strTag.IndexOf('_');
                     if (spos < 0)
                     {
                         if (strTag == "NOR")
@@ -94,8 +94,8 @@ namespace CRFSharpWrapper
 
         public int output(crf_seg_out[] pout)
         {
-            int n = 0;
-            int ret = 0;
+            var n = 0;
+            var ret = 0;
 
             if (nbest_ == 1)
             {
@@ -109,7 +109,7 @@ namespace CRFSharpWrapper
             else
             {
                 //Fill the n best result
-                int iNBest = nbest_;
+                var iNBest = nbest_;
                 if (pout.Length < iNBest)
                 {
                     iNBest = pout.Length;
