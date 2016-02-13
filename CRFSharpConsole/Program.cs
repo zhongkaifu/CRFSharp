@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using AdvUtils;
 
 namespace CRFSharpConsole
 {
@@ -10,14 +8,15 @@ namespace CRFSharpConsole
         static void Usage()
         {
             Console.WriteLine("Linear-chain CRF encoder & decoder by Zhongkai Fu (fuzhongkai@gmail.com)");
-            Console.WriteLine("CRFSharpConsole [parameter list...]");
-            Console.WriteLine("  -encode [parameter list...] - Encode CRF model from given training corpus");
-            Console.WriteLine("  -decode [parameter list...] - Decode CRF model to label text");
-            Console.WriteLine("  -shrink [parameter list...] - Shrink encoded CRF model");
+            Console.WriteLine("CRFSharpConsole.exe [parameters list...]");
+            Console.WriteLine("  -encode [parameters list...] - Encode CRF model from training corpus");
+            Console.WriteLine("  -decode [parameters list...] - Decode CRF model on test corpus");
         }
 
         static void Main(string[] args)
         {
+            Logger.LogFile = "CRFSharpConsole.log";
+
             if (args.Length < 1)
             {
                 Usage();
@@ -26,7 +25,6 @@ namespace CRFSharpConsole
 
             var bEncoder = false;
             var bDecoder = false;
-            var bShrink = false;
 
             for (int index = 0; index < args.Length; index++)
             {
@@ -50,21 +48,15 @@ namespace CRFSharpConsole
                 {
                     bDecoder = true;
                 }
-                if (strType == "shrink")
-                {
-                    bShrink = true;
-                }
             }
 
             //Invalidated parameter
-            if (bEncoder == false && bDecoder == false && bShrink == false)
+            if (bEncoder == false && bDecoder == false)
             {
                 Usage();
                 return;
             }
 
-            //try
-            //{
             if (bEncoder == true)
             {
                 var encoderConsole = new EncoderConsole();
@@ -75,31 +67,10 @@ namespace CRFSharpConsole
                 var decoderConsole = new DecoderConsole();
                 decoderConsole.Run(args);
             }
-            else if (bShrink == true)
-            {
-                var shrinkConsole = new ShrinkConsole();
-                shrinkConsole.Run(args);
-            }
             else
             {
                 Usage();
             }
-            // }
-            //catch (System.AggregateException err)
-            //{
-            //    Console.WriteLine("Error Message : {0}", err.Message);
-            //    Console.WriteLine("Call stack : {0}", err.StackTrace);
-            //    Console.WriteLine("Inner Exception : {0}", err.InnerException);
-            //    foreach (Exception exp in err.InnerExceptions)
-            //    {
-            //        Console.WriteLine("Inner Exception in Collect: {0}", exp);
-            //    }
-            //}
-            //catch (System.Exception err)
-            //{
-            //    Console.WriteLine("Error Message : {0}", err.Message);
-            //    Console.WriteLine("Call stack : {0}", err.StackTrace);
-            //}
         }
     }
 }

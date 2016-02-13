@@ -68,7 +68,6 @@
     <Compile Include="Encoder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SegDecoderTagger.cs" />
-    <Compile Include="Shrink.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CRFSharp\CRFSharp.csproj">

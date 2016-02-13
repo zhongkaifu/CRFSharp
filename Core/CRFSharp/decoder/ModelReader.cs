@@ -11,7 +11,6 @@ namespace CRFSharp
     {
         public uint version; //模型版本号,读取模型时读入
         private DoubleArrayTrieSearch da; //特征集合
-        private BTreeDictionary<long, double> alpha_two_tuples;
 
         //获取key对应的特征id
         public int get_id(string str)
@@ -19,9 +18,24 @@ namespace CRFSharp
             return da.SearchByPerfectMatch(str);
         }
 
-        //加载model文件
-        //返回值<0 为出错，=0为正常
-        public bool LoadModel(string filename)
+        /// <summary>
+        /// Load encoded model from file
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        public void LoadModel(string filename)
+        {
+            //Load model meta data
+            LoadMetaData(filename);
+
+            //Load all feature set data
+            LoadFeaturSet(filename);
+
+            //Load all features alpha data
+            LoadFeatureWeights(filename);
+        }
+
+        public void LoadMetaData(string filename)
         {
             var sr = new StreamReader(filename);
             string strLine;
@@ -78,58 +92,61 @@ namespace CRFSharp
                 }
             }
             sr.Close();
+        }
 
-            //Load all feature set data
+        public void LoadFeaturSet(string filename)
+        {
             var filename_feature = filename + ".feature";
             da = new DoubleArrayTrieSearch();
             da.Load(filename_feature);
+        }
 
+        public void LoadFeatureWeights(string filename)
+        {
+            //feature weight array
+            alpha_ = new double[maxid_ + 1];
 
             //Load all features alpha data
             var filename_alpha = filename + ".alpha";
             var sr_alpha = new StreamReader(filename_alpha);
             var br_alpha = new BinaryReader(sr_alpha.BaseStream);
 
-            if (version == Utils.MODEL_TYPE_NORM)
+            //Get VQ Size
+            int vqSize = br_alpha.ReadInt32();
+
+            if (vqSize > 0)
             {
-                //feature weight array
-                alpha_two_tuples = null;
-                alpha_ = new double[maxid_ + 1];
+                //This is a VQ model, we need to get code book at first
+                Logger.WriteLine("This is a VQ Model. VQSize: {0}", vqSize);
+                List<double> vqCodeBook = new List<double>();
+                for (int i = 0; i < vqSize; i++)
+                {
+                    vqCodeBook.Add(br_alpha.ReadDouble());
+                }
+
+                //Load weights
+                for (long i = 0; i < maxid_; i++)
+                {
+                    int vqIdx = br_alpha.ReadByte();
+                    alpha_[i] = vqCodeBook[vqIdx];
+                }
+            }
+            else
+            {
+                //This is a normal model
+                Logger.WriteLine("This is a normal model.");
                 for (long i = 0; i < maxid_; i++)
                 {
                     alpha_[i] = br_alpha.ReadSingle();
                 }
             }
-            else if (version == Utils.MODEL_TYPE_SHRINKED)
-            {
-                alpha_ = null;
-                alpha_two_tuples = new BTreeDictionary<long, double>();
-                for (long i = 0; i < maxid_; i++)
-                {
-                    var key = br_alpha.ReadInt64();
-                    double weight = br_alpha.ReadSingle();
-                    alpha_two_tuples.Add(key, weight);
-                }
-            }
-            else
-            {
-                Console.WriteLine("This model is not supported.");
-                return false;
-            }
+
             br_alpha.Close();
-            return true;
         }
 
         public double GetAlpha(long index)
         {
-            if (alpha_ != null)
-            {
-                return alpha_[index];
-            }
-            double weight = 0.0f;
-            alpha_two_tuples.TryGetValue(index, out weight);
-
-            return weight;
+            return alpha_[index];
         }
     }
 }

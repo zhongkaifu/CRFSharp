@@ -1,14 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
-using System.Text;
 using AdvUtils;
-
-#if NO_SUPPORT_PARALLEL_LIB
-#else
 using System.Threading.Tasks;
-#endif
 
 namespace CRFSharp
 {
@@ -17,20 +11,14 @@ namespace CRFSharp
         BTreeDictionary<string, FeatureIdPair> featureset_dict_;
         long maxid_;
         Object thisLock = new object();
-#if NO_SUPPORT_PARALLEL_LIB
-#else
         ParallelOptions parallelOption;
-#endif
 
         public DefaultFeatureLexicalDict(int thread_num)
         {
             featureset_dict_ = new BTreeDictionary<string, FeatureIdPair>(StringComparer.Ordinal, 128);
             maxid_ = 0;
-#if NO_SUPPORT_PARALLEL_LIB
-#else
             parallelOption = new ParallelOptions();
             parallelOption.MaxDegreeOfParallelism = thread_num;
-#endif
         }
 
         public void Clear()
@@ -70,18 +58,10 @@ namespace CRFSharp
             var fixArrayValue = new int[Size];
             valList = fixArrayValue;
 
-#if NO_SUPPORT_PARALLEL_LIB
-            for (int i = 0;i < featureset_dict_.ValueList.Count;i++)
-#else
             Parallel.For(0, featureset_dict_.ValueList.Count, parallelOption, i =>
-#endif
             {
                 fixArrayValue[i] = (int)featureset_dict_.ValueList[i].Key;
-            }
-#if NO_SUPPORT_PARALLEL_LIB
-#else
-);
-#endif
+            });
 
         }
 

@@ -1,18 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
-using System.Security.Cryptography;
-using System.Linq;
-using System.Text;
 using System.IO;
 using AdvUtils;
-
-#if NO_SUPPORT_PARALLEL_LIB
-#else
-using System.Collections.Concurrent;
 using System.Threading.Tasks;
-#endif
 
 namespace CRFSharp
 {
@@ -21,23 +12,14 @@ namespace CRFSharp
         int thread_num_;
         public IFeatureLexicalDict featureLexicalDict;
         List<List<List<string>>> trainCorpusList;
-        Object thisLock = new object();
-
-#if NO_SUPPORT_PARALLEL_LIB
-#else
         ParallelOptions parallelOption = new ParallelOptions();
-#endif
 
         public ModelWritter(int thread_num, double cost_factor, uint hugeLexShrinkMemLoad)
         {
             cost_factor_ = cost_factor;
             maxid_ = 0;
             thread_num_ = thread_num;
-
-#if NO_SUPPORT_PARALLEL_LIB
-#else
             parallelOption.MaxDegreeOfParallelism = thread_num;
-#endif
 
             if (hugeLexShrinkMemLoad > 0)
             {
@@ -58,11 +40,7 @@ namespace CRFSharp
             var feature_count = xList.Length;
 
             //Update feature ids
-#if NO_SUPPORT_PARALLEL_LIB
-            for (int i = 0;i < feature_cache_.Count;i++)
-#else
             Parallel.For(0, feature_count, parallelOption, i =>
-#endif
             {
                 for (var j = 0; j < xList[i].feature_cache_.Count; j++)
                 {
@@ -78,13 +56,9 @@ namespace CRFSharp
                     }
                     xList[i].feature_cache_[j] = newfs.ToArray();
                 }
-            }
-#if NO_SUPPORT_PARALLEL_LIB
-#else
-);
-#endif
+            });
 
-            Console.WriteLine("Feature size in total : {0}", maxid_);
+            Logger.WriteLine("Feature size in total : {0}", maxid_);
         }
 
         //Load all records and generate features
@@ -94,16 +68,12 @@ namespace CRFSharp
             var arrayEncoderTaggerSize = 0;
 
             //Generate each record features
-#if NO_SUPPORT_PARALLEL_LIB
-            for (int i = 0;i < trainCorpusList.Count;i++)
-#else
             Parallel.For(0, trainCorpusList.Count, parallelOption, i =>
-#endif
             {
                 var _x = new EncoderTagger(this);
                 if (_x.GenerateFeature(trainCorpusList[i]) == false)
                 {
-                    Console.WriteLine("Load a training sentence failed, skip it.");
+                    Logger.WriteLine("Load a training sentence failed, skip it.");
                 }
                 else
                 {
@@ -116,11 +86,7 @@ namespace CRFSharp
                         Console.Write("{0}...", oldValue);
                     }
                 }
-            }
-#if NO_SUPPORT_PARALLEL_LIB
-#else
-);
-#endif
+            });
 
             trainCorpusList.Clear();
             trainCorpusList = null;
@@ -138,7 +104,7 @@ namespace CRFSharp
         //Build feature set into indexed data
         public bool BuildFeatureSetIntoIndex(string filename, double max_slot_usage_rate_threshold, int debugLevel, string strRetrainModelFileName)
         {
-            Console.WriteLine("Building {0} features into index...", featureLexicalDict.Size);
+            Logger.WriteLine("Building {0} features into index...", featureLexicalDict.Size);
 
             IList<string> keyList;
             IList<int> valList;
@@ -146,7 +112,7 @@ namespace CRFSharp
 
             if (debugLevel > 0)
             {
-                Console.Write("Debug: Writing raw feature set into file...");
+                Logger.WriteLine("Debug: Write raw feature set into file");
                 var filename_featureset_raw_format = filename + ".feature.raw_text";
                 var sw = new StreamWriter(filename_featureset_raw_format);
                 // save feature and its id into lists in raw format
@@ -155,7 +121,6 @@ namespace CRFSharp
                     sw.WriteLine("{0}\t{1}", keyList[i], valList[i]);
                 }
                 sw.Close();
-                Console.WriteLine("Done.");
             }
 
             //Build feature index
@@ -163,7 +128,7 @@ namespace CRFSharp
             var da = new DoubleArrayTrieBuilder(thread_num_);
             if (da.build(keyList, valList, max_slot_usage_rate_threshold) == false)
             {
-                Console.WriteLine("Build lexical dictionary failed.");
+                Logger.WriteLine("Build lexical dictionary failed.");
                 return false;
             }
             //Save indexed feature set into file
@@ -184,8 +149,8 @@ namespace CRFSharp
             }
             else
             {
-                Console.WriteLine();
-                Console.WriteLine("Loading the existed model for re-training...");
+                Logger.WriteLine("");
+                Logger.WriteLine("Loading the existed model for re-training...");
                 //Create weight matrix
                 alpha_ = new double[feature_size() + 1];
 
@@ -210,7 +175,7 @@ namespace CRFSharp
                 }
                 else
                 {
-                    Console.WriteLine("The number of tags isn't equal between two models, it cannot be re-trained.");
+                    Logger.WriteLine("The number of tags isn't equal between two models, it cannot be re-trained.");
                 }
 
                 //Clean up all data
@@ -260,20 +225,60 @@ namespace CRFSharp
             return true;
         }
 
-
-        public bool SaveFeatureWeight(string filename)
+        /// <summary>
+        /// Save feature weights into file
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <param name="bVQ"></param>
+        /// <returns></returns>
+        public void SaveFeatureWeight(string filename, bool bVQ)
         {
             var filename_alpha = filename + ".alpha";
             var tofs = new StreamWriter(filename_alpha, false);
             var bw = new BinaryWriter(tofs.BaseStream);
 
-            for (long i = 1; i <= maxid_; ++i)
+            if (bVQ == true)
             {
-                bw.Write((float)alpha_[i]);
+                Logger.WriteLine("Save feature weights into a VQ model: {0}", filename_alpha);
+                //Build code book
+                VectorQuantization vq = new VectorQuantization();
+                for (long i = 1; i <= maxid_; i++)
+                {
+                    vq.Add(alpha_[i]);
+                }
+
+                int vqSize = 256;
+                double distortion = vq.BuildCodebook(vqSize);
+                Logger.WriteLine("Weight vector quantization distortion: {0}", distortion);
+
+                //VQ size
+                bw.Write(vqSize);
+
+                //Save VQ codebook into file
+                for (int j = 0; j < vqSize; j++)
+                {
+                    bw.Write(vq.CodeBook[j]);
+                }
+
+                //Save weights
+                for (long i = 1; i <= maxid_; ++i)
+                {
+                    bw.Write((byte)vq.ComputeVQ(alpha_[i]));
+                }
+            }
+            else
+            {
+                Logger.WriteLine("Save feature weights into a normal model: {0}", filename_alpha);
+
+                bw.Write(0);
+                //Save weights
+                for (long i = 1; i <= maxid_; ++i)
+                {
+                    bw.Write((float)alpha_[i]);
+                }
             }
 
             bw.Close();
-            return true;
         }
 
         bool OpenTemplateFile(string filename)
@@ -298,7 +303,7 @@ namespace CRFSharp
                 }
                 else
                 {
-                    Console.WriteLine("unknown type: {0}", line);
+                    Logger.WriteLine(Logger.Level.warn, "unknown type: {0}", line);
                 }
             }
             ifs.Close();
@@ -346,7 +351,7 @@ namespace CRFSharp
             }
             ifs.Close();
 
-            Console.WriteLine("Training corpus size: {0}", trainCorpusList.Count);
+            Logger.WriteLine("Training corpus size: {0}", trainCorpusList.Count);
             return true;
         }
 
@@ -365,7 +370,7 @@ namespace CRFSharp
                     var strFeature = apply_rule(it, cur, tagger);
                     if (strFeature == "")
                     {
-                        Console.WriteLine(" format error: " + it);
+                        Logger.WriteLine(Logger.Level.err, " format error: " + it);
                     }
 
                     var id = featureLexicalDict.GetOrAddId(strFeature);
@@ -383,7 +388,7 @@ namespace CRFSharp
                     var strFeature = apply_rule(it, cur, tagger);
                     if (strFeature == "")
                     {
-                        Console.WriteLine(" format error: " + it);
+                        Logger.WriteLine(Logger.Level.err, " format error: " + it);
                     }
                     var id = featureLexicalDict.GetOrAddId(strFeature);
                     feature.Add(id);

@@ -20,6 +20,7 @@ namespace CRFSharpWrapper
         public int debugLevel = 0; //Debug level
         public uint hugeLexMemLoad = 0;
         public double C = 1.0; //cost factor, too big or small value may lead encoded model over tune or under tune
+        public bool bVQ = true; //If we build vector quantization model for feature weights
     }
 
     public class DecoderArgs

@@ -1,21 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using AdvUtils;
-
-#if NO_SUPPORT_PARALLEL_LIB
-#else
 using System.Threading.Tasks;
-#endif
+using AdvUtils;
 
 namespace CRFSharp
 {
     public class LBFGS
     {
         double [] diag;
-        double [] w;
+        FixedBigArray<double> w;
         Mcsrch mcsrch_;
         long nfev, point, npt, iter, info, ispt, iypt;
         int iflag_;
@@ -28,10 +21,7 @@ namespace CRFSharp
         public double[] v;
         public double[] xi;
 
-#if NO_SUPPORT_PARALLEL_LIB
-#else
         private ParallelOptions parallelOption;
-#endif
 
         public LBFGS(int thread_num)
         {
@@ -41,22 +31,13 @@ namespace CRFSharp
             stp = 0.0;
             mcsrch_ = new Mcsrch(thread_num);
 
-#if NO_SUPPORT_PARALLEL_LIB
-#else
             parallelOption = new ParallelOptions();
             parallelOption.MaxDegreeOfParallelism = thread_num;
-#endif
         }
 
-        private double ddot_(long size, double[] dx, long dx_idx, double[] dy, long dy_idx)
+        private double ddot_(long size, FixedBigArray<double> dx, long dx_idx, FixedBigArray<double> dy, long dy_idx)
         {
             double ret = 0.0f;
-#if NO_SUPPORT_PARALLEL_LIB
-            for (long i = 0;i < size;i++)
-            {
-                ret += dx[i + dx_idx] * dy[i + dy_idx];
-            }
-#else
             Parallel.For<double>(0, size, parallelOption, () => 0, (i, loop, subtotal) =>
             {
                 subtotal += dx[i + dx_idx] * dy[i + dy_idx];
@@ -73,18 +54,35 @@ namespace CRFSharp
                 }
                 while (initialValue != Interlocked.CompareExchange(ref ret, newValue, initialValue));
             });
-#endif
             return ret;
         }
 
+
+        private double ddot_(long size, double[] dx, long dx_idx, double[] dy, long dy_idx)
+        {
+            double ret = 0.0f;
+            Parallel.For<double>(0, size, parallelOption, () => 0, (i, loop, subtotal) =>
+            {
+                subtotal += dx[i + dx_idx] * dy[i + dy_idx];
+                return subtotal;
+            },
+            (subtotal) => // lock free accumulator
+            {
+                double initialValue;
+                double newValue;
+                do
+                {
+                    initialValue = ret; // read current value
+                    newValue = initialValue + subtotal;  //calculate new value
+                }
+                while (initialValue != Interlocked.CompareExchange(ref ret, newValue, initialValue));
+            });
+            return ret;
+        }
         void pseudo_gradient(double[] x, double C)
         {
             var size = expected.LongLength - 1;
-#if NO_SUPPORT_PARALLEL_LIB
-            for (long i = 1; i < size + 1;i++)
-#else
             Parallel.For(1, size + 1, parallelOption, i =>
-#endif
             {
                 if (x[i] == 0)
                 {
@@ -105,11 +103,7 @@ namespace CRFSharp
                 {
                     v[i] = (expected[i] + C * sigma(x[i]));
                 }
-            }
-#if NO_SUPPORT_PARALLEL_LIB
-#else
-            );
-#endif
+            });
         }
         double sigma(double x)
         {
@@ -125,7 +119,7 @@ namespace CRFSharp
             if (w == null || w.LongLength == 0)
             {
                 iflag_ = 0;
-                w = new double[size * (2 * msize + 1) + 2 * msize + 1];
+                w = new FixedBigArray<double>(size * (2 * msize + 1) + 2 * msize, 1);
                 diag = new double[size + 1];
                 if (orthant == true)
                 {
@@ -168,35 +162,20 @@ namespace CRFSharp
                 point = 0;
                 ispt = size + (msize << 1);
                 iypt = ispt + size * msize;
-#if NO_SUPPORT_PARALLEL_LIB
-                for (long i = 1;i < size + 1;i++)
-#else
+
                 Parallel.For(1, size + 1, parallelOption, i =>
-#endif
                 {
                     diag[i] = 1.0f;
                     w[ispt + i] = -v[i];
                     w[i] = expected[i];
-                }
-#if NO_SUPPORT_PARALLEL_LIB
-#else
-                );
-#endif
+                });
 
                 if (orthant == true)
                 {
-#if NO_SUPPORT_PARALLEL_LIB
-                    for (long i = 1;i < size + 1;i++)
-#else
                     Parallel.For(1, size + 1, parallelOption, i =>
-#endif
                     {
                         xi[i] = (x[i] != 0 ? sigma(x[i]) : sigma(-v[i]));
-                    }
-#if NO_SUPPORT_PARALLEL_LIB
-#else
-                    );
-#endif
+                    });
                 }
 
                 //第一次试探步长
@@ -216,18 +195,10 @@ namespace CRFSharp
 
                 if (orthant == true)
                 {
-#if NO_SUPPORT_PARALLEL_LIB
-                    for (long i = 1;i < size + 1;i++)
-#else
                     Parallel.For(1, size + 1, parallelOption, i =>
-#endif
                     {
                         xi[i] = (x[i] != 0 ? sigma(x[i]) : sigma(-v[i]));
-                    }
-#if NO_SUPPORT_PARALLEL_LIB
-#else
-                    );
-#endif
+                    });
                 }
 
                 if (iter > size)
@@ -242,19 +213,11 @@ namespace CRFSharp
                 yy = ddot_(size, w, iypt + npt + 1, w, iypt + npt + 1);
 
                 var r_ys_yy = ys / yy;
-#if NO_SUPPORT_PARALLEL_LIB
-                for (long i = 1;i < size + 1;i++)
-#else
                 Parallel.For(1, size + 1, parallelOption, i =>
-#endif
                 {
                     diag[i] = r_ys_yy;
                     w[i] = -v[i];
-                }
-#if NO_SUPPORT_PARALLEL_LIB
-#else
-                );
-#endif
+                });
 
                 cp = point;
                 if (point == 0)
@@ -276,32 +239,16 @@ namespace CRFSharp
                     w[inmc] = (w[size + cp + 1] * sq);
                     var d = -w[inmc];
 
-#if NO_SUPPORT_PARALLEL_LIB
-                    for (long j = 1;j < size + 1;j++)
-#else
                     Parallel.For(1, size + 1, parallelOption, j =>
-#endif
                         {
                             w[j] = (w[j] + d * w[iycn + j]);
-                        }
-#if NO_SUPPORT_PARALLEL_LIB
-#else
-                        );
-#endif
+                        });
                 }
 
-#if NO_SUPPORT_PARALLEL_LIB
-                for (long i = 1;i < size + 1;i++)
-#else
                 Parallel.For(1, size + 1, parallelOption, i =>
-#endif
                 {
                     w[i] = (diag[i] * w[i]);
-                }
-#if NO_SUPPORT_PARALLEL_LIB
-#else
-                );
-#endif
+                });
 
                 for (var i = 1; i <= bound; ++i)
                 {
@@ -311,18 +258,10 @@ namespace CRFSharp
                     beta = w[inmc] - beta;
                     var iscn = ispt + cp * size;
 
-#if NO_SUPPORT_PARALLEL_LIB
-                    for (long j = 1;j < size + 1;j++)
-#else
                     Parallel.For(1, size + 1, parallelOption, j =>
-#endif
                         {
                             w[j] = (w[j] + beta * w[iscn + j]);
-                        }
-#if NO_SUPPORT_PARALLEL_LIB
-#else
-                        );
-#endif
+                        });
 
                     ++cp;
                     if (cp == msize)
@@ -333,37 +272,20 @@ namespace CRFSharp
 
                 if (orthant == true)
                 {
-#if NO_SUPPORT_PARALLEL_LIB
-                    for (long i = 1;i < size + 1;i++)
-#else
                     Parallel.For(1, size + 1, parallelOption, i =>
-#endif
                     {
                         w[i] = (sigma(w[i]) == sigma(-v[i]) ? w[i] : 0);
-                    }
-#if NO_SUPPORT_PARALLEL_LIB
-#else
-                    );
-#endif
+                    });
                 }
 
 
                 // STORE THE NEW SEARCH DIRECTION
                 var offset = ispt + point * size;
-
-#if NO_SUPPORT_PARALLEL_LIB
-                for (long i = 1;i < size + 1;i++)
-#else
                 Parallel.For(1, size + 1, parallelOption, i =>
-#endif
                 {
                     w[offset + i] = w[i];
                     w[i] = expected[i];
-                }
-#if NO_SUPPORT_PARALLEL_LIB
-#else
-                );
-#endif
+                });
 
                 stp = 1.0f;
                 nfev = 0;
@@ -381,18 +303,10 @@ namespace CRFSharp
             {
                 if (orthant == true)
                 {
-#if NO_SUPPORT_PARALLEL_LIB
-                    for (long i = 1;i < size + 1;i++)
-#else
                     Parallel.For(1, size + 1, parallelOption, i =>
-#endif
                     {
                         x[i] = (sigma(x[i]) == sigma(xi[i]) ? x[i] : 0);
-                    }
-#if NO_SUPPORT_PARALLEL_LIB
-#else
-                    );
-#endif
+                    });
                 }
 
 
@@ -409,20 +323,11 @@ namespace CRFSharp
             {
                 // COMPUTE THE NEW STEP AND GRADIENT CHANGE
                 npt = point * size;
-
-#if NO_SUPPORT_PARALLEL_LIB
-                for (long i = 1;i < size + 1;i++)
-#else
                 Parallel.For(1, size + 1, parallelOption, i =>
-#endif
                 {
                     w[ispt + npt + i] = (stp * w[ispt + npt + i]);
                     w[iypt + npt + i] = expected[i] - w[i];
-                }
-#if NO_SUPPORT_PARALLEL_LIB
-#else
-                );
-#endif
+                });
 
                 ++point;
                 if (point == msize)

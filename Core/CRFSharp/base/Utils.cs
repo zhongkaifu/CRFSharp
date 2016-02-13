@@ -31,7 +31,6 @@ namespace CRFSharp
         public const int DEFAULT_CRF_MAX_WORD_NUM = 100;
 
         public const int MODEL_TYPE_NORM = 100;
-        public const int MODEL_TYPE_SHRINKED = 101;
 
 
         public const int ERROR_INVALIDATED_FEATURE = -8;
@@ -121,31 +120,6 @@ namespace CRFSharp
         public static bool is_heap_empty(Heap H)
         {
             return H.size == 0;
-        }
-
-        public static QueueElement find_min(Heap H)
-        {
-            return H.elem_ptr_list[1];
-        }
-
-        public static void heap_clear(ref Heap H)
-        {
-            if (H == null)
-            {
-                return;
-            }
-            if (H.elem_list != null)
-            {
-                H.elem_list = null;
-            }
-            if (H.elem_ptr_list != null)
-            {
-                H.elem_ptr_list = null;
-            }
-            if (H != null)
-            {
-                H = null;
-            }
         }
 
         public static void heap_reset(Heap H)
