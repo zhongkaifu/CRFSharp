@@ -15,11 +15,15 @@ namespace CRFSharpWrapper
     {
         ModelReader modelReader;
 
-        //Load encoded model form file
-        public bool LoadModel(string strModelFileName)
+        /// <summary>
+        /// Load encoded model from file
+        /// </summary>
+        /// <param name="strModelFileName"></param>
+        /// <returns></returns>
+        public void LoadModel(string strModelFileName)
         {
             modelReader = new ModelReader();
-            return modelReader.LoadModel(strModelFileName);
+            modelReader.LoadModel(strModelFileName);
         }
 
         public SegDecoderTagger CreateTagger(int nbest, int this_crf_max_word_num = Utils.DEFAULT_CRF_MAX_WORD_NUM)

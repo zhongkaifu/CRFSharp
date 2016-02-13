@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using CRFSharpWrapper;
+using AdvUtils;
 
 namespace CRFSharpConsole
 {
@@ -79,6 +77,9 @@ namespace CRFSharpConsole
                             case "retrainmodel":
                                 options.strRetrainModelFileName = value;
                                 break;
+                            case "vq":
+                                options.bVQ = (int.Parse(value) != 0) ? true : false;
+                                break;
                             case "regtype":
                                 if (value.ToLower().Trim() == "l1")
                                 {
@@ -90,7 +91,7 @@ namespace CRFSharpConsole
                                 }
                                 else
                                 {
-                                    Console.WriteLine("Invalidated regularization type");
+                                    Logger.WriteLine("Invalidated regularization type");
                                     Usage();
                                     return;
                                 }
@@ -98,7 +99,7 @@ namespace CRFSharpConsole
                             default:
                                 var cc = Console.ForegroundColor;
                                 Console.ForegroundColor = ConsoleColor.Red;
-                                Console.WriteLine("No supported {0} parameter, exit", key);
+                                Logger.WriteLine("No supported {0} parameter, exit", key);
                                 Console.ForegroundColor = cc;
                                 Usage();
                                 return;
@@ -108,7 +109,7 @@ namespace CRFSharpConsole
                     {
                         var cc = Console.ForegroundColor;
                         Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("{0} is invalidated parameter.", key);
+                        Logger.WriteLine("{0} is invalidated parameter.", key);
                         Console.ForegroundColor = cc;
                         Usage();
                         return;
@@ -146,6 +147,7 @@ namespace CRFSharpConsole
             Console.WriteLine("\t-regtype <string> : regularization type (L1 and L2). L1 will generate a sparse model. Default is L2");
             Console.WriteLine("\t-hugelexmem <int> : build lexical dictionary in huge mode and shrinking start when used memory reaches this value. This mode can build more lexical items, but slowly. Value ranges [1,100] and default is disabled.");
             Console.WriteLine("\t-retrainmodel <string> : the existed model for re-training.");
+            Console.WriteLine("\t-vq <int> : vector quantization value (0/1). Default value is 1");
             Console.WriteLine("\t-debug <int> : debug level, default value is 1");
             Console.WriteLine("\t               0 - no debug information output");
             Console.WriteLine("\t               1 - only output raw lexical dictionary for feature set");
@@ -155,7 +157,7 @@ namespace CRFSharpConsole
             Console.WriteLine("Note: -hugelexmem is only used for special task, and it is not recommended for common task, since it costs lots of time for memory shrink in order to load more lexical features into memory");
             Console.WriteLine();
             Console.WriteLine("A command line example as follows:");
-            Console.WriteLine("\tCRFSharpConsole.exe -encode -template template.1 -trainfile ner.train -modelfile ner.model -maxiter 100 -minfeafreq 1 -mindiff 0.0001 -thread 4 -debug 1 -slotrate 0.95");
+            Console.WriteLine("\tCRFSharpConsole.exe -encode -template template.1 -trainfile ner.train -modelfile ner.model -maxiter 100 -minfeafreq 1 -mindiff 0.0001 -thread 4 -debug 2 -vq 1 -slotrate 0.95");
         }
     }
 }

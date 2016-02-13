@@ -80,7 +80,6 @@
     <Compile Include="encoder\Mcsrch.cs" />
     <Compile Include="encoder\ModelWritter.cs" />
     <Compile Include="encoder\DefaultFeatureLexicalDict.cs" />
-    <Compile Include="encoder\OrderableListPartitioner.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

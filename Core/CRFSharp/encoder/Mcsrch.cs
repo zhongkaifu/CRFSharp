@@ -1,14 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using AdvUtils;
+using System;
 using System.Threading;
-using AdvUtils;
-
-#if NO_SUPPORT_PARALLEL_LIB
-#else
 using System.Threading.Tasks;
-#endif
 
 namespace CRFSharp
 {
@@ -24,10 +17,7 @@ namespace CRFSharp
         private double stx, sty;
         private double stmin, stmax;
 
-#if NO_SUPPORT_PARALLEL_LIB
-#else
         private ParallelOptions parallelOption;
-#endif
 
         public Mcsrch(int thread_num)
         {
@@ -48,11 +38,8 @@ namespace CRFSharp
             stmin = 0.0;
             stmax = 0.0;
 
-#if NO_SUPPORT_PARALLEL_LIB
-#else
             parallelOption = new ParallelOptions();
             parallelOption.MaxDegreeOfParallelism = thread_num;
-#endif
         }
 
 
@@ -293,16 +280,9 @@ namespace CRFSharp
         const double xtrapf = 4.0;
         const int maxfev = 20;
 
-        private double ddot_(long size, double[] dx, long dx_idx, double[] dy, long dy_idx)
+        private double ddot_(long size, double[] dx, long dx_idx, FixedBigArray<double> dy, long dy_idx)
         {
             double ret = 0.0f;
-
-#if NO_SUPPORT_PARALLEL_LIB
-            for (long i = 0; i < size; i++)
-            {
-                ret += dx[i + dx_idx] * dy[i + dy_idx];
-            }
-#else
             Parallel.For<double>(0, size, parallelOption, () => 0, (i, loop, subtotal) =>
             {
                 subtotal += dx[i + dx_idx] * dy[i + dy_idx];
@@ -319,11 +299,10 @@ namespace CRFSharp
                 }
                 while (initialValue != Interlocked.CompareExchange(ref ret, newValue, initialValue));
             });
-#endif
             return ret;
         }
 
-        public void mcsrch(double[] x, double f, double[] g, double[] s, long s_idx,
+        public void mcsrch(double[] x, double f, double[] g, FixedBigArray<double> s, long s_idx,
             ref double stp, ref long info, ref long nfev, double[] wa)
         {
             var size = x.LongLength - 1;
@@ -434,18 +413,11 @@ namespace CRFSharp
                 width = lb3_1_stpmax - lb3_1_stpmin;
                 width1 = width / p5;
 
-#if NO_SUPPORT_PARALLEL_LIB
-                for (long i = 1;i < size + 1;i++)
-#else
                 Parallel.For(1, size + 1, parallelOption, i =>
-#endif
                 {
                     wa[i] = x[i];
                 }
-#if NO_SUPPORT_PARALLEL_LIB
-#else
                 );
-#endif
 
                 stx = 0.0;
                 fx = finit;
@@ -477,19 +449,10 @@ namespace CRFSharp
             }
 
             var stp_t = stp;
-
-#if NO_SUPPORT_PARALLEL_LIB
-            for (long i = 1;i < size + 1;i++)
-#else
             Parallel.For(1, size + 1, parallelOption, i =>
-#endif
             {
                 x[i] = (wa[i] + stp_t * s[s_idx + i]);
-            }
-#if NO_SUPPORT_PARALLEL_LIB
-#else
-            );
-#endif
+            });
 
             info = -1;
         }

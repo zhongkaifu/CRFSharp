@@ -1,5 +1,5 @@
 ﻿/**********************************************/
-/*Project: CRF#                               */
+/*Project: CRFSharp                           */
 /*Author: Zhongkai Fu                         */
 /*Email: fuzhongkai@gmail.com                 */
 /**********************************************/

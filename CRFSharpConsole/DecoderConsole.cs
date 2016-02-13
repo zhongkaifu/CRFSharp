@@ -7,6 +7,7 @@ using CRFSharpWrapper;
 using CRFSharp;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
+using AdvUtils;
 
 namespace CRFSharpConsole
 {
@@ -113,13 +114,13 @@ namespace CRFSharpConsole
 
             if (File.Exists(options.strInputFileName) == false)
             {
-                Console.WriteLine("FAILED: Open {0} file failed.", options.strInputFileName);
+                Logger.WriteLine("FAILED: Open {0} file failed.", options.strInputFileName);
                 return false;
             }
 
             if (File.Exists(options.strModelFileName) == false)
             {
-                Console.WriteLine("FAILED: Open {0} file failed.", options.strModelFileName);
+                Logger.WriteLine("FAILED: Open {0} file failed.", options.strModelFileName);
                 return false;
             }
 
@@ -137,11 +138,10 @@ namespace CRFSharpConsole
 
             //Create CRFSharp wrapper instance. It's a global instance
             var crfWrapper = new CRFSharpWrapper.Decoder();
-            //Load model from file
-            if (crfWrapper.LoadModel(options.strModelFileName) == false)
-            {
-                return false;
-            }
+
+            //Load encoded model from file
+            Logger.WriteLine("Loading model from {0}", options.strModelFileName);
+            crfWrapper.LoadModel(options.strModelFileName);
 
             var queueRecords = new ConcurrentQueue<List<List<string>>>();
             var queueSegRecords = new ConcurrentQueue<List<List<string>>>();
