@@ -1,19 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Text;
-using AdvUtils;
 
 namespace CRFSharp
 {
     public class BaseModel
     {
+        private StringBuilder builder = new StringBuilder();
+
         public long maxid_;
         public double cost_factor_;
 
         public List<string> unigram_templs_;
         public List<string> bigram_templs_;
-        
+
         //Labeling tag list
         public List<string> y_;
         public uint ysize() { return (uint)y_.Count; }
@@ -24,24 +23,57 @@ namespace CRFSharp
         //Feature set value array
         public double[] alpha_;
 
-        //获取类别i的字符表示
-        public string y(int i) { return y_[i]; }
-
-        public long feature_size() { return maxid_; }
-
         public BaseModel()
         {
             cost_factor_ = 1.0;
         }
 
-        string get_index(string p, int pos, ref int i, Tagger tagger)
+        //获取类别i的字符表示
+        public string y(int i) { return y_[i]; }
+
+        public long feature_size() { return maxid_; }
+
+        public string apply_rule(string p, int pos, Tagger tagger)
+        {
+            builder.Clear();
+            for (var i = 0; i < p.Length; i++)
+            {
+                if (p[i] == '%')
+                {
+                    i++;
+                    if (p[i] == 'x')
+                    {
+                        i++;
+                        var res = get_index(p, pos, i, tagger);
+                        i = res.idx;
+                        if (res.value == null)
+                        {
+                            return string.Empty;
+                        }
+                        builder.Append(res.value);
+                    }
+                    else
+                    {
+                        return string.Empty;
+                    }
+                }
+                else
+                {
+                    builder.Append(p[i]);
+                }
+            }
+
+            return builder.ToString();
+        }
+
+        Index get_index(string p, int pos, int i, Tagger tagger)
         {
             if (p[i] != '[')
             {
-                return null;
+                return new Index(null, i);
             }
             i++;
-
+            var isInRow = true;
             var col = 0;
             var row = 0;
             var neg = 1;
@@ -52,88 +84,74 @@ namespace CRFSharp
                 i++;
             }
 
-            while (i < p.Length)
+            for (; i < p.Length; i++)
             {
-                if (p[i] >= '0' && p[i] <= '9')
+                var c = p[i];
+                if (isInRow)
                 {
-                    row = 10 * row + (p[i] - '0');
-                }
-                else if (p[i] == ',')
-                {
-                    i++;
-                    goto NEXT1;
-                }
-                else return null;
-
-                i++;
-            }
-
-        NEXT1:
-            while (i < p.Length)
-            {
-                if (p[i] >= '0' && p[i] <= '9')
-                {
-                    col = 10 * col + (p[i] - '0');
-                }
-                else if (p[i] == ']')
-                {
-                    goto NEXT2;
-                }
-                else return null;
-
-                i++;
-            }
-        NEXT2:
-            row *= neg;
-
-            if (col < 0 || col >= xsize_)
-            {
-                return null;
-            }
-            var idx = pos + row;
-            if (idx < 0)
-            {
-                return "_B-" + (-idx).ToString();
-            }
-            if (idx >= tagger.word_num)
-            {
-                return "_B+" + (idx - tagger.word_num + 1).ToString();
-            }
-
-            return tagger.x_[idx][col];
-        }
-
-        public string apply_rule(string p, int pos, Tagger tagger)
-        {
-            var feature_function = new StringBuilder();
-            string r;
-            for (var i = 0; i < p.Length; i++)
-            {
-                if (p[i] == '%')
-                {
-                    i++;
-                    switch (p[i])
+                    if (c >= '0' && c <= '9')
                     {
-                        case 'x':
-                            i++;
-                            r = get_index(p, pos, ref i, tagger);
-                            if (r == null)
-                            {
-                                return "";
-                            }
-                            feature_function.Append(r);
-                            break;
-                        default:
-                            return "";
+                        row = 10 * row + (c - '0');
+                    }
+                    else if (c == ',')
+                    {
+                        isInRow = false;
+                    }
+                    else
+                    {
+                        return new Index(null, i);
                     }
                 }
                 else
                 {
-                    feature_function.Append(p[i]);
+                    if (c >= '0' && c <= '9')
+                    {
+                        col = 10 * col + (c - '0');
+                    }
+                    else if (c == ']')
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        return new Index(null, i);
+                    }
                 }
             }
 
-            return feature_function.ToString();
+            row *= neg;
+
+            if (col < 0 || col >= xsize_)
+            {
+                return new Index(null, i);
+            }
+            var idx = pos + row;
+            if (idx < 0)
+            {
+                return new Index("_B-" + (-idx).ToString(), i); ;
+            }
+            if (idx >= tagger.word_num)
+            {
+                return new Index("_B+" + (idx - tagger.word_num + 1).ToString(), i);
+            }
+
+            return new Index(tagger.x_[idx][col], i);
+
+        }
+
+        private struct Index
+        {
+            public int idx;
+            public string value;
+
+            /// <summary>
+            /// Initializes a new instance of the <see cref="T:System.Object"/> class.
+            /// </summary>
+            public Index(string value, int idx)
+            {
+                this.idx = idx;
+                this.value = value;
+            }
         }
     }
 }
