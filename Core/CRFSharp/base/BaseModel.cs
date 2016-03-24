@@ -5,8 +5,6 @@ namespace CRFSharp
 {
     public class BaseModel
     {
-        private StringBuilder builder = new StringBuilder();
-
         public long maxid_;
         public double cost_factor_;
 
@@ -33,9 +31,9 @@ namespace CRFSharp
 
         public long feature_size() { return maxid_; }
 
-        public string apply_rule(string p, int pos, Tagger tagger)
+        public StringBuilder apply_rule(string p, int pos, StringBuilder resultContainer, Tagger tagger)
         {
-            builder.Clear();
+            resultContainer.Clear();
             for (var i = 0; i < p.Length; i++)
             {
                 if (p[i] == '%')
@@ -48,22 +46,21 @@ namespace CRFSharp
                         i = res.idx;
                         if (res.value == null)
                         {
-                            return string.Empty;
+                            return null;
                         }
-                        builder.Append(res.value);
+                        resultContainer.Append(res.value);
                     }
                     else
                     {
-                        return string.Empty;
+                        return null;
                     }
                 }
                 else
                 {
-                    builder.Append(p[i]);
+                    resultContainer.Append(p[i]);
                 }
             }
-
-            return builder.ToString();
+            return resultContainer;
         }
 
         Index get_index(string p, int pos, int i, Tagger tagger)
