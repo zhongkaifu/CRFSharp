@@ -212,80 +212,54 @@ With NO_SUPPORT_PARALLEL_LIB flag, CRFSharp needn't to be re-compiled or modifie
 
 ## Use CRFSharp API in your project
 
-Besides command line tool, to encode and decode CRF model, you can also add CRFSharp.dll or CRFSharpWrapper.dll as references in your project. CRFSharp.dll contains core algorithm and provides many interfaces in low level. On the contrary, CRFSharpWrapper.dll  wraps above low level interfaces and provides interfaces in high level.
+Besides command line tool, CRFSharp provides APIs for developers to use it in their projects. In this section, we will show you how to use it. Basically, CRFSharp has two dll files: One is CRFSharp.dll which contains core algorithm and provides many APIs in low level. The other is CRFSharpWrapper.dll which wraps above low level interfaces and provides interfaces in high level.  
 
-The following paragraphs show how to use CRFSharpWrapper.dll in a project
-
-## Encode model
+## Encode a CRF model in your project
 1. Add CRFSharpWrapper.dll as reference  
 2. Add following code snippet  
 ```c#
-int max_iter = 1000;  
-int min_feature_freq = 2;  
-double min_diff = 0.0001;  
-double slot_usage_rate_threshold = 0.95;  
-int threads_num = 1;  
-string strTemplateFileName = null; //template file name  
-string strTrainingCorpus = null; //training corpus file name  
-string strEncodedModelFileName = null; //encoded model file name  
-bool bDebugMode = false;  
-CRFSharpWrapper.Encoder encoder = new CRFSharpWrapper.Encoder();  
-encoder.Learn(strTemplateFileName, strTrainingCorpus, strEncodedModelFileName, max_iter, min_feature_freq, min_diff, 1, threads_num, slot_usage_rate_threshold, bDebugMode);  
+var encoder = new CRFSharpWrapper.Encoder();
+var options = new EncoderArgs();
+options.debugLevel = 1;
+options.strTemplateFileName = "template.txt"; //template file name  
+options.strTrainingCorpus = "train.txt"; //training corpus file name  
+options.strEncodedModelFileName = "ner_model"; //encoded model file name  
+options.max_iter = 1000;
+options.min_feature_freq = 2;
+options.min_diff = 0.0001;
+options.threads_num = 4;
+options.C = 1.0;
+options.slot_usage_rate_threshold = 0.95;
+bool bRet = encoder.Learn(options);
 ```
-The Encoder.Learn is wrapped encoder interface. It's defined as follows:
-```c#
-//encoding CRF model from training corpus  
-public bool Learn(string templfile, //template file name  
-         string trainfile, //training corpus file name  
-         string modelfile, //encoded model file name  
-         int maxitr, //maximum iteration, when encoding iteration reaches this value, the process will be ended.  
-         int freq, //minimum feature frequency, if one feature's frequency is less than this value, the feature will be dropped.  
-         double eta, //minimum diff value, when diff less than the value consecutive 3 times, the process will be ended.  
-         float C,  
-         int thread_num, //the amount of threads used to train model.  
-         double slot_usage_rate_threshold, //the slot usage rate threshold when building feature set.  
-         bool bDebugMode //encode model as debug mode if it is true  
-      )  
-```
+For detailed information, please visit source code: https://github.com/zhongkaifu/CRFSharp/blob/master/CRFSharpConsole/EncoderConsole.cs  
 
-# Decode model
+# Decode a CRFSharp model in your project
 1. Add CRFSharpWrapper.dll as reference  
 2. Add following code snippet  
 
 ```c#
-//Initialize  
-//Create CRFSharp wrapper instance. It's a global instance  
-CRFSharpWrapper.Decoder crfWrapper = new CRFSharpWrapper.Decoder();  
-//Load model from file  
-if (crfWrapper.LoadModel(strModelFileName) == false)  
-{  
-return false;  
-}  
-//Create decoder tagger instance. If the running environment is multi-threads, each thread needs a separated instance  
-CRFSharpWrapper.SegDecoderTagger tagger = crfWrapper.CreateTagger();  
-if (tagger == null)  
-{  
-return false;  
-}  
-  
+//Create CRFSharp wrapper instance. It's a global instance
+var crfWrapper = new CRFSharpWrapper.Decoder();
+
+//Load encoded model from file
+crfWrapper.LoadModel(options.strModelFileName);
+
+//Create decoder tagger instance. If the running environment is multi-threads, each thread needs a separated instance
+var tagger = crfWrapper.CreateTagger(options.nBest, options.maxword);
+tagger.set_vlevel(options.probLevel);
+
+//Initialize result
+var crf_out = new crf_seg_out[options.nBest];
+for (var i = 0; i < options.nBest; i++)
+{
+    crf_out[i] = new crf_seg_out(tagger.crf_max_word_num);
+}
+
 //Process  
-List<List<string>> featureSet = BuildFeatureSet(strTestText); //Build feature set from given test text.  
-crfWrapper.Segment(crf_out, tagger, featureSet, 1, 0); //Label tokens according feature set and save result into crf_out.  
-  
-//Parse result and save N-best result into rstList  
-List<string> rstList = new List<string>();  
-for (int i = 0; i < crf_out.nbest; i++)  
-{  
-    string strout = "";  
-    crf_term_out crf_term_out = crf_out.term_buf[i];  
-    for (int j = 0; j < crf_term_out.Count; j++)  
-    {  
-        string str = strTestText.Substring(crf_term_out.offsetList[j], crf_term_out.lengthList[j]);  
-        string strNE = crf_term_out.nePropList[j].strTag;  
-        strout += str + "[" + strNE + "] ";  
-    }  
-    rstList.Add(strout);  
-}  
+List<List<string>> featureSet = BuildFeatureSet(strTestText); //Build feature set from given test text.
+crfWrapper.Segment(crf_out, tagger, inbuf);
+
 //An example for feature set builidng. Only use 1-dim character based feature  
 privatestatic List<List<string>> BuildFeatureSet(string str)  
 {  
@@ -298,15 +272,11 @@ foreach (char ch in str)
 return sinbuf;  
 }  
 ```
-The Decoder.Segment is wrapped decoder interface. It's defined as follows:
+The Decoder.Segment is a wrapped decoder interface. It's defined as follows:
 ```c#
  //Segment given text
  public int Segment(crf_out pout, //segment result
      SegDecoderTagger tagger, //Tagger per thread
      List<List<string>> inbuf, //feature set for segment
-     int nbest_value, //N-best result is needed
-     int vlevel_value //0 - no need to calculate probability, 
-                      //1 - calculate all types probability
-                      //2 - only calculate named entity's probability
      )
 ```
