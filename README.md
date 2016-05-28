@@ -280,3 +280,14 @@ The Decoder.Segment is a wrapped decoder interface. It's defined as follows:
      List<List<string>> inbuf, //feature set for segment
      )
 ```
+
+#CRFSharp referenced by the following published papers  
+1.     [Reconhecimento de entidades nomeadas em textos em português do Brasil no domınio do e-commerce](http://www.lbd.dcc.ufmg.br/colecoes/tilic/2015/010.pdf)  
+2.     [Multimodal Wearable Sensing for Fine-Grained Activity Recognition in Healthcare](http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=7155432)  
+3.     [A CRF-based Method for Automatic Construction of Chinese Symptom Lexicon](http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=7429085)  
+4.     [Bileşik Cümlelerde Yan Cümleciklerin Otomatik Etiketlenmesi](http://ab.org.tr/ab16/bildiri/20.pdf)  
+5.     [Entity Recognition in Bengali language](http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=7377333)  
+6.     [A Hybrid Semi-supervised Learning Approach to Identifying Protected Health Information in Electronic Medical Records](http://dl.acm.org/citation.cfm?id=2857630)  
+7.     [Global Journal on Technology](https://www.ce.yildiz.edu.tr/personal/mfatih/file/15131/x.pdf)  
+8.     [Einf uhrung in Conditional Random Fields zum Taggen von sequentiellen Daten Tool: Wapiti](http://kitt.cl.uzh.ch/clab/crf/crf.pdf)  
+9.     [Nghiên cứu phương pháp trích chọn thông tin thời tiết từ văn bản tiếng Việt](http://repository.vnu.edu.vn/bitstream/VNU_123/4980/1/00050005751.pdf)  
