@@ -291,3 +291,4 @@ The Decoder.Segment is a wrapped decoder interface. It's defined as follows:
 7.     [Global Journal on Technology](https://www.ce.yildiz.edu.tr/personal/mfatih/file/15131/x.pdf)  
 8.     [Einf uhrung in Conditional Random Fields zum Taggen von sequentiellen Daten Tool: Wapiti](http://kitt.cl.uzh.ch/clab/crf/crf.pdf)  
 9.     [Nghiên cứu phương pháp trích chọn thông tin thời tiết từ văn bản tiếng Việt](http://repository.vnu.edu.vn/bitstream/VNU_123/4980/1/00050005751.pdf)  
+10.    [Unsupervised Word and Dependency Path Embeddings for Aspect Term Extraction](http://arxiv.org/abs/1605.07843)  
