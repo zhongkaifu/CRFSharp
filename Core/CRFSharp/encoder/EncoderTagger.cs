@@ -11,7 +11,7 @@ namespace CRFSharp
 {
     public class EncoderTagger : Tagger
     {
-        public ModelWritter feature_index_;
+        public ModelWriter feature_index_;
         public short[] answer_;
 
         public int eval(int[,] merr)
@@ -28,7 +28,7 @@ namespace CRFSharp
             return err;
         }
 
-        public EncoderTagger(ModelWritter modelWriter)
+        public EncoderTagger(ModelWriter modelWriter)
         {
             feature_index_ = modelWriter;
             ysize_ = (short)feature_index_.ysize();

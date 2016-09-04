@@ -5,11 +5,15 @@ using System.IO;
 using System.Text;
 using AdvUtils;
 using System.Threading.Tasks;
+using CRFSharp.decoder;
 
 namespace CRFSharp
 {
-    public class ModelWritter : BaseModel
+    public class ModelWriter : BaseModel
     {
+        private readonly string modelFileName;
+        private readonly ModelReaderBase modelReader;
+
         private readonly Pool<StringBuilder> _buildersPool =
             new Pool<StringBuilder>(p => new StringBuilder(100), b => b.Clear());
 
@@ -18,11 +22,14 @@ namespace CRFSharp
         List<List<List<string>>> trainCorpusList;
         ParallelOptions parallelOption = new ParallelOptions();
 
-        public ModelWritter(int thread_num, double cost_factor, uint hugeLexShrinkMemLoad)
+        public ModelWriter(int thread_num, double cost_factor,
+            uint hugeLexShrinkMemLoad, string modelFileName)
         {
             cost_factor_ = cost_factor;
             maxid_ = 0;
             thread_num_ = thread_num;
+            this.modelFileName = modelFileName;
+            this.modelReader = new DefaultModelReader(modelFileName);
             parallelOption.MaxDegreeOfParallelism = thread_num;
 
             if (hugeLexShrinkMemLoad > 0)
@@ -65,7 +72,7 @@ namespace CRFSharp
             Logger.WriteLine("Feature size in total : {0}", maxid_);
         }
 
-        //Load all records and generate features
+        // Load all records and generate features
         public EncoderTagger[] ReadAllRecords()
         {
             var arrayEncoderTagger = new EncoderTagger[trainCorpusList.Count];
@@ -106,7 +113,7 @@ namespace CRFSharp
         }
 
         //Build feature set into indexed data
-        public bool BuildFeatureSetIntoIndex(string filename, double max_slot_usage_rate_threshold, int debugLevel, string strRetrainModelFileName)
+        public bool BuildFeatureSetIntoIndex(string filename, double max_slot_usage_rate_threshold, int debugLevel)
         {
             Logger.WriteLine("Building {0} features into index...", featureLexicalDict.Size);
 
@@ -138,7 +145,7 @@ namespace CRFSharp
             //Save indexed feature set into file
             da.save(filename_featureset);
 
-            if (strRetrainModelFileName == null || strRetrainModelFileName.Length == 0)
+            if (string.IsNullOrWhiteSpace(modelFileName))
             {
                 //Clean up all data
                 featureLexicalDict.Clear();
@@ -158,8 +165,7 @@ namespace CRFSharp
                 //Create weight matrix
                 alpha_ = new double[feature_size() + 1];
 
-                var modelReader = new ModelReader();
-                modelReader.LoadModel(strRetrainModelFileName);
+                modelReader.LoadModel();
 
                 if (modelReader.y_.Count == y_.Count)
                 {

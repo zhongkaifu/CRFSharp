@@ -5,6 +5,7 @@ using System.Threading;
 using AdvUtils;
 using CRFSharp;
 using System.Threading.Tasks;
+using CRFSharp.decoder;
 
 namespace CRFSharpWrapper
 {
@@ -39,23 +40,25 @@ namespace CRFSharpWrapper
             }
 
             Logger.WriteLine("Open and check training corpus and templates...");
-            var modelWritter = new ModelWritter(args.threads_num, args.C, args.hugeLexMemLoad);
-            if (modelWritter.Open(args.strTemplateFileName, args.strTrainingCorpus) == false)
+            var modelWriter = new ModelWriter(args.threads_num, args.C,
+                args.hugeLexMemLoad, args.strRetrainModelFileName);
+
+            if (modelWriter.Open(args.strTemplateFileName, args.strTrainingCorpus) == false)
             {
                 Logger.WriteLine("Open training corpus or template file failed.");
                 return false;
             }
 
             Logger.WriteLine("Load training data and generate lexical features: ");
-            var xList = modelWritter.ReadAllRecords();
+            var xList = modelWriter.ReadAllRecords();
 
             Logger.WriteLine("");
 
             Logger.WriteLine("Shrinking feature set [frequency is less than {0}]...", args.min_feature_freq);
-            modelWritter.Shrink(xList, args.min_feature_freq);
+            modelWriter.Shrink(xList, args.min_feature_freq);
 
             Logger.WriteLine("Saving model meta data...");
-            if (!modelWritter.SaveModelMetaData(args.strEncodedModelFileName))
+            if (!modelWriter.SaveModelMetaData(args.strEncodedModelFileName))
             {
                 Logger.WriteLine(Logger.Level.err, "Failed!");
                 return false;
@@ -66,7 +69,7 @@ namespace CRFSharpWrapper
             }
 
             Logger.WriteLine("Indexing feature set with {0} maximum slot usage rate threshold...", args.slot_usage_rate_threshold);
-            if (!modelWritter.BuildFeatureSetIntoIndex(args.strEncodedModelFileName, args.slot_usage_rate_threshold, args.debugLevel, args.strRetrainModelFileName))
+            if (!modelWriter.BuildFeatureSetIntoIndex(args.strEncodedModelFileName, args.slot_usage_rate_threshold, args.debugLevel))
             {
                 Logger.WriteLine(Logger.Level.err, "Failed!");
                 return false;
@@ -77,7 +80,7 @@ namespace CRFSharpWrapper
             }
 
             Logger.WriteLine("Sentences size: " + xList.Length);
-            Logger.WriteLine("Features size:  " + modelWritter.feature_size());
+            Logger.WriteLine("Features size:  " + modelWriter.feature_size());
             Logger.WriteLine("Thread(s): " + args.threads_num);
             Logger.WriteLine("Regularization type: " + args.regType.ToString());
             Logger.WriteLine("Freq:                " + args.min_feature_freq);
@@ -96,23 +99,23 @@ namespace CRFSharpWrapper
             {
                 orthant = true;
             }
-            if (runCRF(xList, modelWritter, orthant, args) == false)
+            if (runCRF(xList, modelWriter, orthant, args) == false)
             {
                 Logger.WriteLine(Logger.Level.warn, "Some warnings are raised during encoding...");
             }
 
             Logger.WriteLine("Saving model feature's weight...");
-            modelWritter.SaveFeatureWeight(args.strEncodedModelFileName, args.bVQ);
+            modelWriter.SaveFeatureWeight(args.strEncodedModelFileName, args.bVQ);
 
             return true;
         }
 
-        bool runCRF(EncoderTagger[] x, ModelWritter modelWritter, bool orthant, EncoderArgs args)
+        bool runCRF(EncoderTagger[] x, ModelWriter modelWriter, bool orthant, EncoderArgs args)
         {
             var old_obj = double.MaxValue;
             var converge = 0;
             var lbfgs = new LBFGS(args.threads_num);
-            lbfgs.expected = new double[modelWritter.feature_size() + 1];
+            lbfgs.expected = new double[modelWriter.feature_size() + 1];
 
             var processList = new List<CRFEncoderThread>();
             var parallelOption = new ParallelOptions();
@@ -133,7 +136,7 @@ namespace CRFSharpWrapper
             //Statistic term and result tags frequency
             var termNum = 0;
             int[] yfreq;
-            yfreq = new int[modelWritter.y_.Count];
+            yfreq = new int[modelWriter.y_.Count];
             for (int index = 0; index < x.Length; index++)
             {
                 var tagger = x[index];
@@ -165,7 +168,7 @@ namespace CRFSharpWrapper
                 }
 
                 int[,] merr;
-                merr = new int[modelWritter.y_.Count, modelWritter.y_.Count];
+                merr = new int[modelWriter.y_.Count, modelWriter.y_.Count];
                 for (var i = 0; i < args.threads_num; ++i)
                 {
                     threadList[i].Join();
@@ -174,9 +177,9 @@ namespace CRFSharpWrapper
                     lbfgs.zeroone += processList[i].zeroone;
 
                     //Calculate error
-                    for (var j = 0; j < modelWritter.y_.Count; j++)
+                    for (var j = 0; j < modelWriter.y_.Count; j++)
                     {
-                        for (var k = 0; k < modelWritter.y_.Count; k++)
+                        for (var k = 0; k < modelWriter.y_.Count; k++)
                         {
                             merr[j, k] += processList[i].merr[j, k];
                         }
@@ -184,14 +187,14 @@ namespace CRFSharpWrapper
                 }
 
                 long num_nonzero = 0;
-                var fsize = modelWritter.feature_size();
-                var alpha = modelWritter.alpha_;
+                var fsize = modelWriter.feature_size();
+                var alpha = modelWriter.alpha_;
                 if (orthant == true)
                 {
                     //L1 regularization
                     Parallel.For<double>(1, fsize + 1, parallelOption, () => 0, (k, loop, subtotal) =>
                     {
-                        subtotal += Math.Abs(alpha[k] / modelWritter.cost_factor_);
+                        subtotal += Math.Abs(alpha[k] / modelWriter.cost_factor_);
                         if (alpha[k] != 0.0)
                         {
                             Interlocked.Increment(ref num_nonzero);
@@ -216,8 +219,8 @@ namespace CRFSharpWrapper
                     num_nonzero = fsize;
                     Parallel.For<double>(1, fsize + 1, parallelOption, () => 0, (k, loop, subtotal) =>
                    {
-                       subtotal += (alpha[k] * alpha[k] / (2.0 * modelWritter.cost_factor_));
-                       lbfgs.expected[k] += (alpha[k] / modelWritter.cost_factor_);
+                       subtotal += (alpha[k] * alpha[k] / (2.0 * modelWriter.cost_factor_));
+                       lbfgs.expected[k] += (alpha[k] / modelWriter.cost_factor_);
                        return subtotal;
                    },
                    (subtotal) => // lock free accumulator
@@ -237,7 +240,7 @@ namespace CRFSharpWrapper
                 var diff = (itr == 0 ? 1.0f : Math.Abs(old_obj - lbfgs.obj) / old_obj);
                 old_obj = lbfgs.obj;
 
-                ShowEvaluation(x.Length, modelWritter, lbfgs, termNum, itr, merr, yfreq, diff, startDT, num_nonzero, args);
+                ShowEvaluation(x.Length, modelWriter, lbfgs, termNum, itr, merr, yfreq, diff, startDT, num_nonzero, args);
                 if (diff < args.min_diff)
                 {
                     converge++;
@@ -261,11 +264,11 @@ namespace CRFSharpWrapper
 
                     //Save current best feature weight into file
                     dMinErrRecord = (double)lbfgs.zeroone / (double)x.Length;
-                    modelWritter.SaveFeatureWeight("feature_weight_tmp", false);
+                    modelWriter.SaveFeatureWeight("feature_weight_tmp", false);
                 }
 
                 int iret;
-                iret = lbfgs.optimize(alpha, modelWritter.cost_factor_, orthant);
+                iret = lbfgs.optimize(alpha, modelWriter.cost_factor_, orthant);
                 if (iret <= 0)
                 {
                     return false;
@@ -275,7 +278,7 @@ namespace CRFSharpWrapper
             return true;
         }
 
-        private static void ShowEvaluation(int recordNum, ModelWritter feature_index, LBFGS lbfgs, int termNum, int itr, int[,] merr, int[] yfreq, double diff, DateTime startDT, long nonzero_feature_num, EncoderArgs args)
+        private static void ShowEvaluation(int recordNum, ModelWriter feature_index, LBFGS lbfgs, int termNum, int itr, int[,] merr, int[] yfreq, double diff, DateTime startDT, long nonzero_feature_num, EncoderArgs args)
         {
             var ts = DateTime.Now - startDT;
 

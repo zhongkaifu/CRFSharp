@@ -72,8 +72,10 @@
     <Compile Include="base\Pool.cs" />
     <Compile Include="base\Tagger.cs" />
     <Compile Include="base\Utils.cs" />
+    <Compile Include="decoder\DefaultModelReader.cs" />
     <Compile Include="decoder\DecoderTagger.cs" />
-    <Compile Include="decoder\ModelReader.cs" />
+    <Compile Include="decoder\ModelReaderBase.cs" />
+    <Compile Include="decoder\ModelReaderExtensions.cs" />
     <Compile Include="encoder\CRFEncoderThread.cs" />
     <Compile Include="encoder\EncoderTagger.cs" />
     <Compile Include="encoder\FeatureIdPair.cs" />
@@ -82,7 +84,7 @@
     <Compile Include="encoder\IFeatureLexicalDict.cs" />
     <Compile Include="encoder\LBFGS.cs" />
     <Compile Include="encoder\Mcsrch.cs" />
-    <Compile Include="encoder\ModelWritter.cs" />
+    <Compile Include="encoder\ModelWriter.cs" />
     <Compile Include="encoder\DefaultFeatureLexicalDict.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
