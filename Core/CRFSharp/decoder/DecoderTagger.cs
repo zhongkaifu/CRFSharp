@@ -41,7 +41,7 @@ namespace CRFSharp
         public int vlevel_; //Need to calculate probability 0 - no need to calculate, 1 - calculate sequence label probability, 2 - calculate both sequence label and individual entity probability
         protected int nbest_; //output top N-best result
         //CrfModel model;
-        ModelReader featureIndex;
+        ModelReaderBase featureIndex;
 
         Node node(int i, int j)
         {
@@ -124,7 +124,7 @@ namespace CRFSharp
 
         //使用模型初始化tag，必须先使用该函数初始化才能使用add和parse                                                                    
         //正常返回为0， 错误返回<0
-        public int init_by_model(ModelReader model_p)
+        public int init_by_model(ModelReaderBase model_p)
         {
             featureIndex = model_p;
             ysize_ = (short)model_p.ysize();
