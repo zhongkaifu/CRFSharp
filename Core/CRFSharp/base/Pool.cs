@@ -5,10 +5,10 @@ using System.Threading;
 namespace CRFSharp
 {
     /// <summary>
-    /// Represents general purpose pool
+    /// Represents general purpose pool that has no restrictions (e.g. grows if it's required)
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    sealed class Pool<T>
+    internal sealed class Pool<T>
     {
         private int _totalCount;
         private readonly ConcurrentStack<T> _container = new ConcurrentStack<T>();
@@ -45,7 +45,7 @@ namespace CRFSharp
         }
 
         /// <summary>
-        /// Returns amount of free items in bag
+        /// Returns amount of free items in the bag
         /// </summary>
         public int FreeCount { get { return _container.Count; } }
 
@@ -63,7 +63,7 @@ namespace CRFSharp
         /// Pool item that is return when pool request is processed
         /// </summary>
         /// <typeparam name="T1"></typeparam>
-        public struct PoolItem<T1> : IDisposable
+        internal struct PoolItem<T1> : IDisposable
         {
             /// <summary>
             /// Pooled item
@@ -90,10 +90,7 @@ namespace CRFSharp
             /// </summary>
             public void Dispose()
             {
-                if (_cleaner != null)
-                {
-                    _cleaner(Item);
-                }
+                _cleaner?.Invoke(Item);
                 _owner.Return(Item);
             }
         }
