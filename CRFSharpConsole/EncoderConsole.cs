@@ -147,7 +147,7 @@ namespace CRFSharpConsole
             Console.WriteLine("\t-regtype <string> : regularization type (L1 and L2). L1 will generate a sparse model. Default is L2");
             Console.WriteLine("\t-hugelexmem <int> : build lexical dictionary in huge mode and shrinking start when used memory reaches this value. This mode can build more lexical items, but slowly. Value ranges [1,100] and default is disabled.");
             Console.WriteLine("\t-retrainmodel <string> : the existed model for re-training.");
-            Console.WriteLine("\t-vq <int> : vector quantization value (0/1). Default value is 1");
+            Console.WriteLine("\t-vq <int> : model vector quantization value (0/1). The model size will be reduced to 1/4 original model size. Default value is 0");
             Console.WriteLine("\t-debug <int> : debug level, default value is 1");
             Console.WriteLine("\t               0 - no debug information output");
             Console.WriteLine("\t               1 - only output raw lexical dictionary for feature set");
