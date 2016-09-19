@@ -241,3 +241,5 @@ _Pvt_Extensions
 # JetBrains Rider
 .idea/
 *.sln.iml
+/browse.VC.db
+/.vscode/.browse.VC.db
