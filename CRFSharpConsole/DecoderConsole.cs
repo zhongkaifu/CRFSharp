@@ -7,6 +7,7 @@ using CRFSharpWrapper;
 using CRFSharp;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using AdvUtils;
 
 namespace CRFSharpConsole
@@ -111,7 +112,7 @@ namespace CRFSharpConsole
         bool Decode(CRFSharpWrapper.DecoderArgs options)
         {
             var parallelOption = new ParallelOptions();
-
+            var watch = Stopwatch.StartNew();
             if (File.Exists(options.strInputFileName) == false)
             {
                 Logger.WriteLine("FAILED: Open {0} file failed.", options.strInputFileName);
@@ -228,6 +229,8 @@ namespace CRFSharpConsole
             {
                 swSeg.Close();
             }
+            watch.Stop();
+            Logger.WriteLine("Elapsed: {0} ms", watch.ElapsedMilliseconds);
 
             return true;
         }
