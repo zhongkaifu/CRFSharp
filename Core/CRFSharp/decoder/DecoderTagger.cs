@@ -29,6 +29,9 @@ namespace CRFSharp
 
     public class DecoderTagger : Tagger
     {
+        private readonly Pool<StringBuilder> _buildersPool =
+            new Pool<StringBuilder>(p => new StringBuilder(100), b => b.Clear());
+
         public int forward_backward_stat; //前向后向过程运行状态，0为未运行，1为已经运行
 
         //概率计算函数
@@ -177,9 +180,9 @@ namespace CRFSharp
             for (var i = 0; i < ysize_; ++i)
             {
                 var eos = Utils.allc_from_heap(heap_queue);
-                eos.node = node_[k,i];
-                eos.fx = -node_[k,i].bestCost;
-                eos.gx = -node_[k,i].cost;
+                eos.node = node_[k, i];
+                eos.fx = -node_[k, i].bestCost;
+                eos.gx = -node_[k, i].cost;
                 eos.next = null;
                 if (Utils.heap_insert(eos, heap_queue) < 0)
                 {
@@ -334,7 +337,7 @@ namespace CRFSharp
             //6.initNbest
             //	求nbest(n>1)时的数据结构初始化，此后可以调用next()来获取nbest结果
             if (nbest_ > 1)
-            {  
+            {
                 //如果只求1-best，不需要使用initNbest()和next()获取结果
                 ret = initNbest();
                 if (ret < 0)
@@ -354,57 +357,59 @@ namespace CRFSharp
             {
                 return Utils.ERROR_INVALIDATED_PARAMETER;
             }
-
-            var id = 0;
-            var feature_cache_row_size = 0;
-            var feature_cache_size = 0;
-            for (var cur = 0; cur < word_num; cur++)
+            using (var v = _buildersPool.GetOrCreate())
             {
-                feature_cache_row_size = 0;
-                for (int index = 0; index < featureIndex.unigram_templs_.Count; index++)
+                var builder = v.Item;
+                var id = 0;
+                var feature_cache_row_size = 0;
+                var feature_cache_size = 0;
+                for (var cur = 0; cur < word_num; cur++)
                 {
-                    var templ = featureIndex.unigram_templs_[index];
-                    var strFeature = featureIndex.apply_rule(templ, cur, this);
-                    if (strFeature == "")
+                    feature_cache_row_size = 0;
+                    for (int index = 0; index < featureIndex.unigram_templs_.Count; index++)
                     {
-                        return Utils.ERROR_EMPTY_FEATURE;
+                        var templ = featureIndex.unigram_templs_[index];
+                        var res = featureIndex.apply_rule(templ, cur, builder, this);
+                        if (res == null)
+                        {
+                            return Utils.ERROR_EMPTY_FEATURE;
+                        }
+                        id = featureIndex.get_id(res.ToString());
+                        if (id != -1)
+                        {
+                            feature_cache_[feature_cache_size][feature_cache_row_size] = id;
+                            feature_cache_row_size++;
+                        }
                     }
-                    id = featureIndex.get_id(strFeature);
-                    if (id != -1)
-                    {
-                        feature_cache_[feature_cache_size][feature_cache_row_size] = id;
-                        feature_cache_row_size++;
-                    }
+                    feature_cache_[feature_cache_size][feature_cache_row_size] = -1;
+                    feature_cache_size++;
                 }
-                feature_cache_[feature_cache_size][feature_cache_row_size] = -1;
-                feature_cache_size++;
-            }
 
-            for (var cur = 0; cur < word_num; cur++)
-            {
-                feature_cache_row_size = 0;
-                for (int index = 0; index < featureIndex.bigram_templs_.Count; index++)
+                for (var cur = 0; cur < word_num; cur++)
                 {
-                    var templ = featureIndex.bigram_templs_[index];
-                    var strFeature = featureIndex.apply_rule(templ, cur, this);
-                    if (strFeature == "")
+                    feature_cache_row_size = 0;
+                    for (int index = 0; index < featureIndex.bigram_templs_.Count; index++)
                     {
-                        return Utils.ERROR_EMPTY_FEATURE;
-                    }
+                        var templ = featureIndex.bigram_templs_[index];
+                        var strFeature = featureIndex.apply_rule(templ, cur, builder, this);
+                        if (strFeature == null)
+                        {
+                            return Utils.ERROR_EMPTY_FEATURE;
+                        }
 
-                    id = featureIndex.get_id(strFeature);
-                    if (id != -1)
-                    {
-                        feature_cache_[feature_cache_size][feature_cache_row_size] = id;
-                        feature_cache_row_size++;
+                        id = featureIndex.get_id(strFeature.ToString());
+                        if (id != -1)
+                        {
+                            feature_cache_[feature_cache_size][feature_cache_row_size] = id;
+                            feature_cache_row_size++;
+                        }
                     }
+                    feature_cache_[feature_cache_size][feature_cache_row_size] = -1;
+                    feature_cache_size++;
                 }
-                feature_cache_[feature_cache_size][feature_cache_row_size] = -1;
-                feature_cache_size++;
+
+                return Utils.ERROR_SUCCESS;
             }
-
-            return Utils.ERROR_SUCCESS;
-
         }
 
 
