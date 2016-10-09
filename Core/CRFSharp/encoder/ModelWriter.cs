@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.IO;
+using System.Text;
 using AdvUtils;
 using System.Threading.Tasks;
 using CRFSharp.decoder;
@@ -10,8 +11,13 @@ namespace CRFSharp
 {
     public class ModelWriter : BaseModel
     {
+
         private readonly string modelFileName;
         private readonly ModelReader modelReader;
+
+        private readonly Pool<StringBuilder> _buildersPool =
+            new Pool<StringBuilder>(p => new StringBuilder(100), b => b.Clear());
+
         int thread_num_;
         public IFeatureLexicalDict featureLexicalDict;
         List<List<List<string>>> trainCorpusList;
@@ -365,42 +371,51 @@ namespace CRFSharp
         public bool BuildFeatures(EncoderTagger tagger)
         {
             var feature = new List<long>();
-
-            //tagger.feature_id_ = tagger.feature_cache_.Count;
-            for (var cur = 0; cur < tagger.word_num; ++cur)
+            using (var v = _buildersPool.GetOrCreate())
             {
-                for (int index = 0; index < unigram_templs_.Count; index++)
+                var localBuilder = v.Item;
+                //tagger.feature_id_ = tagger.feature_cache_.Count;
+                for (var cur = 0; cur < tagger.word_num; ++cur)
                 {
-                    var it = unigram_templs_[index];
-                    var strFeature = apply_rule(it, cur, tagger);
-                    if (strFeature == "")
+                    for (int index = 0; index < unigram_templs_.Count; index++)
                     {
-                        Logger.WriteLine(Logger.Level.err, " format error: " + it);
+                        var it = unigram_templs_[index];
+                        var strFeature = apply_rule(it, cur, localBuilder, tagger);
+                        if (strFeature == null)
+                        {
+                            Logger.WriteLine(Logger.Level.err, " format error: " + it);
+                        }
+                        else
+                        {
+                            var id = featureLexicalDict.GetOrAddId(strFeature.ToString());
+                            feature.Add(id);
+                        }
                     }
-
-                    var id = featureLexicalDict.GetOrAddId(strFeature);
-                    feature.Add(id);
-                }
-                tagger.feature_cache_.Add(feature.ToArray());
-                feature.Clear();
-            }
-
-            for (var cur = 1; cur < tagger.word_num; ++cur)
-            {
-                for (int index = 0; index < bigram_templs_.Count; index++)
-                {
-                    var it = bigram_templs_[index];
-                    var strFeature = apply_rule(it, cur, tagger);
-                    if (strFeature == "")
-                    {
-                        Logger.WriteLine(Logger.Level.err, " format error: " + it);
-                    }
-                    var id = featureLexicalDict.GetOrAddId(strFeature);
-                    feature.Add(id);
+                    tagger.feature_cache_.Add(feature.ToArray());
+                    feature.Clear();
                 }
 
-                tagger.feature_cache_.Add(feature.ToArray());
-                feature.Clear();
+                for (var cur = 1; cur < tagger.word_num; ++cur)
+                {
+                    for (int index = 0; index < bigram_templs_.Count; index++)
+                    {
+                        var it = bigram_templs_[index];
+                        var strFeature = apply_rule(it, cur, localBuilder, tagger);
+                        if (strFeature == null)
+                        {
+                            Logger.WriteLine(Logger.Level.err, " format error: " + it);
+                        }
+                        else
+                        {
+                            var id = featureLexicalDict.GetOrAddId(strFeature.ToString());
+                            feature.Add(id);
+                        }
+                    }
+
+                    tagger.feature_cache_.Add(feature.ToArray());
+                    feature.Clear();
+
+                }
 
             }
 

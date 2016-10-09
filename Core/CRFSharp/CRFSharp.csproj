@@ -32,6 +32,7 @@
     <DefineConstants Condition=" '$(TargetFrameworkVersion)' == 'v3.5' ">NO_SUPPORT_PARALLEL_LIB</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <Choose>
     <When Condition=" '$(TargetFrameworkVersion)'=='v3.5' ">
@@ -66,6 +67,7 @@
     <Compile Include="base\IGenerateFeature.cs" />
     <Compile Include="base\Node.cs" />
     <Compile Include="base\Path.cs" />
+    <Compile Include="base\Pool.cs" />
     <Compile Include="base\Tagger.cs" />
     <Compile Include="base\Utils.cs" />
     <Compile Include="decoder\DecoderTagger.cs" />
