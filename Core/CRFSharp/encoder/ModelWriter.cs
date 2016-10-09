@@ -12,10 +12,11 @@ namespace CRFSharp
     public class ModelWriter : BaseModel
     {
         private readonly string modelFileName;
-        private readonly ModelReaderBase modelReader;
 
         private readonly Pool<StringBuilder> _buildersPool =
             new Pool<StringBuilder>(p => new StringBuilder(100), b => b.Clear());
+
+        private readonly ModelReader modelReader;
 
         int thread_num_;
         public IFeatureLexicalDict featureLexicalDict;
@@ -29,7 +30,7 @@ namespace CRFSharp
             maxid_ = 0;
             thread_num_ = thread_num;
             this.modelFileName = modelFileName;
-            this.modelReader = new DefaultModelReader(modelFileName);
+            this.modelReader = new ModelReader(modelFileName);
             parallelOption.MaxDegreeOfParallelism = thread_num;
 
             if (hugeLexShrinkMemLoad > 0)

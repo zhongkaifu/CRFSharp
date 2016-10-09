@@ -8,21 +8,50 @@ using CRFSharp.decoder;
 
 namespace CRFSharp
 {
-    public abstract class ModelReaderBase : BaseModel
+    public class ModelReader : BaseModel
     {
-
+        private readonly Func<string, Stream> modelLoader = null;
+             
         public uint version; //模型版本号,读取模型时读入
         private DoubleArrayTrieSearch da; //特征集合
 
-        //获取key对应的特征id
-        public virtual int get_id(string str)
+        /// <summary>
+        /// Returns the model path.
+        /// </summary>
+        public string ModelPath { get; private set; }
+
+        /// <summary>
+        /// Creates a new <see cref="ModelReader"/>
+        /// that will load the model from the file system,
+        /// using the given <paramref name="modelPath"/>.
+        /// </summary>
+        /// <param name="modelPath">
+        /// Path to the model.
+        /// </param>
+        public ModelReader(string modelPath) :
+            this(GetStreamFromFileSystem, modelPath)
         {
-            return da.SearchByPerfectMatch(str);
+            
         }
 
-        public virtual double GetAlpha(long index)
+        /// <summary>
+        /// Creates a new <see cref="ModelReader"/>
+        /// that will load the model from the file system,
+        /// using the given <paramref name="modelPath"/>.
+        /// </summary>
+        /// <param name="modelLoader">
+        /// A delegate capable of resolving 
+        /// the given <paramref name="modelPath"/>
+        /// into a stream with the model file.
+        /// </param>
+        /// <param name="modelPath">
+        /// Path to the model.
+        /// </param>
+        public ModelReader(Func<string, Stream> modelLoader,
+            string modelPath)
         {
-            return alpha_[index];
+            this.modelLoader = modelLoader;
+            this.ModelPath = modelPath;
         }
 
         /// <summary>
@@ -40,6 +69,32 @@ namespace CRFSharp
             LoadFeatureWeights();
         }
 
+        //获取key对应的特征id
+        public virtual int get_id(string str)
+        {
+            return da.SearchByPerfectMatch(str);
+        }
+
+        public virtual double GetAlpha(long index)
+        {
+            return alpha_[index];
+        }
+
+        /// <summary>
+        /// The default model loading strategy -
+        /// load files from the file system.
+        /// </summary>
+        /// <param name="path">
+        /// Model file path.</param>
+        /// <returns>
+        /// A stream containing the requested file.
+        /// </returns>
+        private static Stream GetStreamFromFileSystem(string path)
+        {
+            path.ThrowIfNotExists();
+            return File.OpenRead(path);
+        }
+
         /// <summary>
         /// Provides access to the metadata stream.
         /// </summary>
@@ -47,7 +102,12 @@ namespace CRFSharp
         /// A <see cref="Stream"/> instance
         /// that points to the model metadata file.
         /// </returns>
-        protected abstract Stream GetMetadataStream();
+        private Stream GetMetadataStream()
+        {
+            string path = ModelPath.ToMetadataModelName();
+
+            return modelLoader(path);
+        }
 
         /// <summary>
         /// Provides access to the feature set stream.
@@ -56,7 +116,12 @@ namespace CRFSharp
         /// A <see cref="Stream"/> instance
         /// that allows accessing the model feature set file.
         /// </returns>
-        protected abstract Stream GetFeatureSetStream();
+        private Stream GetFeatureSetStream()
+        {
+            string path = ModelPath.ToFeatureSetFileName();
+
+            return modelLoader(path);
+        }
 
         /// <summary>
         /// Provides access to the feature set stream.
@@ -65,7 +130,12 @@ namespace CRFSharp
         /// A <see cref="Stream"/> instance
         /// that allows accessing the model feature weight file.
         /// </returns>
-        protected abstract Stream GetFeatureWeightStream();
+        private Stream GetFeatureWeightStream()
+        {
+            string path = ModelPath.ToFeatureWeightFileName();
+
+            return modelLoader(path);
+        }
 
         private void LoadMetadata()
         {

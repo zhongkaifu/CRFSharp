@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using CRFSharp;
 using CRFSharp.decoder;
@@ -14,43 +15,49 @@ namespace CRFSharpWrapper
 {
     public class Decoder
     {
-        ModelReaderBase modelReaderBase;
+        ModelReader _modelReader;
 
         /// <summary>
         /// Load encoded model from file
         /// </summary>
-        /// <param name="strModelFileName"></param>
+        /// <param name="modelFilename">
+        /// The model path.
+        /// </param>
         /// <returns></returns>
-        public void LoadModel(string strModelFileName)
+        public void LoadModel(string modelFilename)
         {
-            modelReaderBase = new DefaultModelReader(strModelFileName);
-            modelReaderBase.LoadModel();
+            _modelReader = new ModelReader(modelFilename);
+            _modelReader.LoadModel();
         }
 
         /// <summary>
-        /// Loads an encoded model using the specified reader implementation.
+        /// Loads an encoded model using the specified delegate.
         /// Using this overload you can read the model e.g. 
         /// from network, zipped archives or other locations, as you wish.
         /// </summary>
-        /// <param name="modelReader">
+        /// <param name="modelLoader">
         /// Allows reading the model from arbitrary formats and sources.
         /// </param>
+        /// <param name="modelFilename">
+        /// The model file name, as used by the given <paramref name="modelLoader"/>
+        /// for file resolution.
+        /// </param>
         /// <returns></returns>
-        public void LoadModel(ModelReaderBase modelReader)
+        public void LoadModel(Func<string, Stream> modelLoader, string modelFilename)
         {
-            this.modelReaderBase = modelReader;
-            modelReaderBase.LoadModel();
+            this._modelReader = new ModelReader(modelLoader, modelFilename);
+            _modelReader.LoadModel();
         }
 
         public SegDecoderTagger CreateTagger(int nbest, int this_crf_max_word_num = Utils.DEFAULT_CRF_MAX_WORD_NUM)
         {
-            if (modelReaderBase == null)
+            if (_modelReader == null)
             {
                 return null;
             }
 
             var tagger = new SegDecoderTagger(nbest, this_crf_max_word_num);
-            tagger.init_by_model(modelReaderBase);
+            tagger.init_by_model(_modelReader);
 
             return tagger;
         }
