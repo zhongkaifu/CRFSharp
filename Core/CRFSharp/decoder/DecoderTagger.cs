@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace CRFSharp
@@ -237,20 +238,21 @@ namespace CRFSharp
             return Utils.ERROR_SUCCESS;
         }
 
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         int buildLattice()
         {
             //Generate feature ids for all nodes and paths
             RebuildFeatures();
 
-            for (var i = 0; i < word_num; i++)
+            for (int i = 0; i < word_num; ++i)
             {
-                for (var j = 0; j < ysize_; j++)
+                for (int j = 0; j < ysize_; ++j)
                 {
-                    calcCost(node_[i, j]);
-                    for (int index = 0; index < node_[i, j].lpathList.Count; index++)
+                    var currentNode = node_[i, j];
+                    calcCost(currentNode);
+                    for (int index = 0; index < currentNode.lpathList.Count; ++index)
                     {
-                        var p = node_[i, j].lpathList[index];
+                        var p = currentNode.lpathList[index];
                         calcCost(p);
                     }
                 }
@@ -413,25 +415,36 @@ namespace CRFSharp
         }
 
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void calcCost(Node n)
         {
             double c = 0;
             var f = feature_cache_[n.fid];
-            for (var i = 0; i < f.Length && f[i] != -1; i++)
+
+            for (int i = 0; i < f.Length; ++i)
             {
-                c += featureIndex.GetAlpha(f[i] + n.y);
+                int fCurrent = (int)f[i];
+                if (fCurrent == -1)
+                    break;
+                c += featureIndex.GetAlpha(fCurrent + n.y);
             }
+
             n.cost = featureIndex.cost_factor_ * c;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void calcCost(CRFSharp.Path p)
         {
             double c = 0;
-            var f = feature_cache_[p.fid];
-            for (var i = 0; i < f.Length && f[i] != -1; i++)
+            long[] f = feature_cache_[p.fid];
+            for (int i = 0; i < f.Length; ++i)
             {
-                c += featureIndex.GetAlpha((int)(f[i] + p.lnode.y * ysize_ + p.rnode.y));
+                int fCurrent = (int)f[i];
+                if (fCurrent == -1)
+                    break;
+                c += featureIndex.GetAlpha((fCurrent + p.lnode.y * ysize_ + p.rnode.y));
             }
+
             p.cost = featureIndex.cost_factor_ * c;
         }
 
