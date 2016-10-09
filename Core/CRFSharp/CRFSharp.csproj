@@ -68,9 +68,8 @@
     <Compile Include="base\Path.cs" />
     <Compile Include="base\Tagger.cs" />
     <Compile Include="base\Utils.cs" />
-    <Compile Include="decoder\DefaultModelReader.cs" />
     <Compile Include="decoder\DecoderTagger.cs" />
-    <Compile Include="decoder\ModelReaderBase.cs" />
+    <Compile Include="decoder\ModelReader.cs" />
     <Compile Include="decoder\ModelReaderExtensions.cs" />
     <Compile Include="encoder\CRFEncoderThread.cs" />
     <Compile Include="encoder\EncoderTagger.cs" />
