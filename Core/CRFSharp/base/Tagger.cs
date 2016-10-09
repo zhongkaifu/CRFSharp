@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace CRFSharp
@@ -31,7 +32,7 @@ namespace CRFSharp
 
                     var node_i_j = node_[i, j];
 
-                    for (int index = 0; index < node_i_j.lpathList.Count; index++)
+                    for (int index = 0; index < node_i_j.lpathList.Count; ++index)
                     {
                         var p = node_i_j.lpathList[index];
                         var cost = p.lnode.bestCost + p.cost + node_i_j.cost;
@@ -124,29 +125,27 @@ namespace CRFSharp
 
 
         //Assign feature ids to node and path
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int RebuildFeatures()
         {
             var fid = 0;
-            for (short cur = 0; cur < word_num; cur++)
+            for (short cur = 0; cur < word_num; ++cur)
             {
-                for (short i = 0; i < ysize_; i++)
+                for (short i = 0; i < ysize_; ++i)
                 {
                     node_[cur, i].fid = fid;
-                }
-                fid++;
-            }
-
-            for (var cur = 1; cur < word_num; cur++)
-            {
-                for (var j = 0; j < ysize_; ++j)
-                {
-                    for (int index = 0; index < node_[cur - 1, j].rpathList.Count; index++)
+                    if (cur > 0)
                     {
-                        var path = node_[cur - 1, j].rpathList[index];
-                        path.fid = fid;
+                        Node previousNode = node_[cur - 1, i];
+                        for (int index = 0; index < previousNode.rpathList.Count; ++index)
+                        {
+                            Path path = previousNode.rpathList[index];
+                            path.fid = fid + word_num - 1;
+                        }
                     }
                 }
-                fid++;
+
+                ++fid;
             }
 
             return 0;
