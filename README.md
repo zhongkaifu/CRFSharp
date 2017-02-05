@@ -246,6 +246,7 @@ var crfWrapper = new CRFSharpWrapper.Decoder();
 crfWrapper.LoadModel(options.strModelFileName);
 
 //Create decoder tagger instance. If the running environment is multi-threads, each thread needs a separated instance
+
 var tagger = crfWrapper.CreateTagger(options.nBest, options.maxword);
 tagger.set_vlevel(options.probLevel);
 
@@ -295,4 +296,8 @@ The Decoder.Segment is a wrapped decoder interface. It's defined as follows:
 11.    [A HYBRID INTELLIGENT SYSTEM TO IMPROVE DATA PREPROCESSING](http://www.sci-int.com/pdf/3596982411%20a%201%203631-3637%20Sohail%20Sarwar--IT--ISD--4-1-16--PAID.pdf) 
 12.    [Family Matters: Company Relations Extraction from Wikipedia](http://rd.springer.com/chapter/10.1007/978-3-319-45880-9_7)
 13.    [Active Learning for Incremental POI Extraction and Pairing](http://ir.lib.ncu.edu.tw:88/thesis/view_etd.asp?URN=103522034)
-
+14.    [Semantic Role Labeling With Relative Clauses](http://dergipark.gov.tr/download/article-file/256977)
+15.    [Automatic de-identification of medical records with a multilevel hybrid semi-supervised learning approach](http://ieeexplore.ieee.org/abstract/document/7800267/)
+16.    [中文医学术语资源的自动构建方法研究及应用]
+17.    [Web2.0环境下的科技论文共享系统研究]
+18.    [基于条件随机场的入侵检测方法研究]
