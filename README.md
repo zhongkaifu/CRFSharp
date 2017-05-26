@@ -15,7 +15,7 @@ The training corpus has 1.24 million records with nearly 1.2 billion features. F
 
 Besides command line tool, CRFSharp has also provided APIs and these APIs can be used into other projects and services for key techincal tasks. For example: WordSegment project has used CRFSharp to recognize named entity; Query Term Analyzer project has used it to analyze query term important level in word formation and Geography Coder project has used it to detect geo-entity from text. For detailed information about APIs, please see section [Use CRFSharp API in your project] in below.
 
- To use CRFSharp, we need to prepare corpus and design feature templates at first. CRFSharp's file formats are compatible with CRF++(official website:http://crfpp.googlecode.com/svn/trunk/doc/index.html). The following paragraphs will introduce data formats and how to use CRFSharp in both command line and APIs
+ To use CRFSharp, we need to prepare corpus and design feature templates at first. CRFSharp's file formats are compatible with CRF++(official website:https://taku910.github.io/crfpp/). The following paragraphs will introduce data formats and how to use CRFSharp in both command line and APIs
 
 ## Training file format
 Training corpus contains many records to describe what the model should be. For each record, it is split into one or many tokens and each token has one or many dimension features to describe itself. 
