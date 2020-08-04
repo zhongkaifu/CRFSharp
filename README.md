@@ -1,13 +1,15 @@
+Donate a beverage to help me to keep CRFSharp up to date :) [![Support via PayPal](https://www.paypalobjects.com/en_GB/i/btn/btn_donate_SM.gif)](https://www.paypal.me/fuzhongkai/)
+
 CRFSharp
 ========
-CRFSharp is Conditional Random Fields (CRF) implemented by .NET(C#), a machine learning algorithm for learning from labeled sequences of examples.
+CRFSharp is Conditional Random Fields (CRF) implemented by .Net Core(C#), a machine learning algorithm for learning from labeled sequences of examples.
 
 ## Overview
-CRFSharp is Conditional Random Fields implemented by .NET(C#), a machine learning algorithm for learning from labeled sequences of examples. It is widely used in Natural Language Process (NLP) tasks, for example: word breaker, postaging, named entity recognized and so on.
+CRFSharp is Conditional Random Fields implemented by .Net Core(C#), a machine learning algorithm for learning from labeled sequences of examples. It is widely used in Natural Language Process (NLP) tasks, for example: word breaker, postaging, named entity recognized and so on.
 
- CRFSharp (aka CRF#) is based on .NET Framework 4.0 and its mainly algorithm is similar with CRF++ written by Taku Kudo. It encodes model parameters by L-BFGS. Moreover, it has many significant improvements than CRF++, such as totally parallel encoding, optimizing memory usage and so on. 
+CRFSharp (aka CRF#) is based on .NET Core, so it can run on Windows/Linux and other platforms .Net core is supporting. Its main algorithm is similar as CRF++ written by Taku Kudo. It encodes model parameters by L-BFGS. Moreover, it also has many significant improvements than CRF++, such as totally parallel encoding, optimizing memory usage and so on. 
 
- Currently, when training corpus, compared with CRF++, CRFSharp can make full use of multi-core CPUs and use memory effectively, especially for very huge size training corpus and tags. So in the same environment, CRFSharp is able to encode much more complex models with less cost than CRF++.
+Currently, when training corpus, compared with CRF++, CRFSharp can make full use of multi-core CPUs and use memory effectively, especially for very huge size training corpus and tags. So in the same environment, CRFSharp is able to encode much more complex models with less cost than CRF++.
 
 The following screenshot is an example that CRFSharp is running on a machine with 16 cores CPUs and 96GB memory.
 ![](http://download-codeplex.sec.s-msft.com/Download?ProjectName=crfsharp&DownloadId=600636)
@@ -206,9 +208,7 @@ For bigram template, CRFSharp will enumerate all possible combined output classe
 
 ## Run on Linux/Mac
 
-With Mono-project which is the third party .NET framework on Linux/Mac, CRFSharp is able to run on some non-Windows platforms, such as Linux, Mac and others.
-
-With NO_SUPPORT_PARALLEL_LIB flag, CRFSharp needn't to be re-compiled or modified to run on these operating systems. However, if you want to disable NO_SUPPORT_PARALLEL_LIB for the highest encoding performance, please modify existed code by replacing Parallel.For for "long" type with that for "int" type, since so far Mono-project hasn't implemented Parallel.For for "long" type yet.
+CRFSharp is built by .Net core, so it can naturally run on Windows/Linux/MacOs and other platforms that .Net core supports.
 
 ## Use CRFSharp API in your project
 
@@ -301,3 +301,14 @@ The Decoder.Segment is a wrapped decoder interface. It's defined as follows:
 16.    [中文医学术语资源的自动构建方法研究及应用]
 17.    [Web2.0环境下的科技论文共享系统研究]
 18.    [基于条件随机场的入侵检测方法研究]
+19.    [Urdu part of speech tagging using conditional random fields]
+20.    [Deep recurrent neural networks with word embeddings for Urdu named entity recognition]
+21.    [Part of Speech Tagging in Urdu: Comparison of Machine and Deep Learning Approaches]
+22.    [Context based number normalization using skip-chain conditional random fields]
+23.    [Generic Urdu NLP Framework for Urdu Text Analysis: Hybridization of heuristics and Machine Learning Techniques]
+24.    [Semi-Automatic Corpus Expansion and Extraction of Uyghur-Named Entities and Relations Based on a Hybrid Method]
+25.    [Named Entity Recognition: A Survey for Indian Languages]
+26.    [A comprehensive review of conditional random fields: variants, hybrids and applications]  
+
+And so on...
+
